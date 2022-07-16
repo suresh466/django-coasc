@@ -9,9 +9,14 @@ class Transaction(models.Model):
 
 class Split(models.Model):
 
+    transaction = models.ForeignKey(
+        Transaction,
+        default=None,
+        on_delete=models.CASCADE,
+    )
     account = models.ForeignKey(
         ImpersonalAccount,
-        on_delete=models.DO_NOTHING
+        on_delete=models.DO_NOTHING,
     )
     type_split = models.CharField(max_length=2)
     amount = models.DecimalField(decimal_places=2, max_digits=11)
