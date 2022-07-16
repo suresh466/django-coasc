@@ -3,6 +3,10 @@ from accounts.models import ImpersonalAccount
 
 # Create your models here.
 
+class Transaction(models.Model):
+
+    description = models.TextField(blank=True, default='')
+
 class Split(models.Model):
 
     account = models.ForeignKey(

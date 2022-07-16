@@ -1,12 +1,12 @@
 from django.test import TestCase
 from accounts.models import ImpersonalAccount
-from journals.models import Split
+from journals.models import Split, Transaction
 
 # Create your tests here.
 
-class SplitModelTest(TestCase):
+class TransactionAndSplitModelTest(TestCase):
 
-    def test_create_and_retreive_split(self):
+    def test_create_and_retreive_splits(self):
         ac_1 = ImpersonalAccount.objects.create(
             name='Share pujji',
             type_ac='LI',
@@ -38,3 +38,15 @@ class SplitModelTest(TestCase):
         self.assertEqual(saved_split[1].account, ac_1)
         self.assertEqual(saved_split[1].type_split, 'cr')
         self.assertEqual(saved_split[1].amount, 15500)
+
+    def test_create_and_retreive_transactions(self):
+        Transaction.objects.create(description='first description')
+        Transaction.objects.create(description='')
+        Transaction.objects.create()
+
+        saved_transactions = Transaction.objects.all()
+
+        self.assertEqual(saved_transactions.count(), 3)
+        self.assertEqual(saved_transactions[0].description, 'first description')
+        self.assertEqual(saved_transactions[1].description, '')
+        self.assertEqual(saved_transactions[2].description, '')
