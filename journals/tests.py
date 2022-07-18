@@ -10,7 +10,7 @@ class TransactionAndSplitModelTest(TestCase):
 
     def create_impersonal_account(self, name, type_ac, code, parent_ac=None):
         return ImpersonalAccount.objects.create(
-                name=name, code=code, type_ac=type_ac, parent_ac=parent_ac)
+            name=name, code=code, type_ac=type_ac, parent_ac=parent_ac)
 
     def create_transaction(self, description=''):
         return Transaction.objects.create(description=description)
