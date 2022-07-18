@@ -1,6 +1,9 @@
 from django.db import models
+from django.dispatch import receiver
+from django.db.models import signals
 
 from accounts.models import ImpersonalAccount
+from journals import exceptions
 
 
 class Transaction(models.Model):
@@ -13,3 +16,10 @@ class Split(models.Model):
     account = models.ForeignKey(ImpersonalAccount, on_delete=models.DO_NOTHING)
     type_split = models.CharField(max_length=2)
     amount = models.DecimalField(decimal_places=2, max_digits=11)
+
+
+@receiver(signals.post_save, sender=Split)
+def check_split_balance(sender, **kwargs):
+    for split in kwargs['instance'].transaction.split_set.all():
+        if split.amount <= 0:
+            raise exceptions.ZeroAmountError
