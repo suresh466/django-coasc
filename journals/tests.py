@@ -88,8 +88,21 @@ class TransactionAndSplitModelTest(TestCase):
                 split_1.save()
                 split_2.save()
 
-    def test_raises_exception_if_transaction_unbalanced(self):
-        pass
+    def test_raises_exception_if_split_ac_has_child(self):
+        ac_1 = self.create_impersonal_account('Share pujji', 'LI', '10')
+        ac_2 = self.create_impersonal_account('Nagad hissab', 'AS', '80')
+        self.create_impersonal_account('Nagad child', 'AS', '80.1', ac_2)
+        transaction = Transaction(description='first description')
+        split_1 = Split(account=ac_2, type_split='dr', amount=4000)
+        split_2 = Split(account=ac_1, type_split='cr', amount=4000)
 
-    def test_transaction_not_saved_for_root_account(self):
+        with self.assertRaises(exceptions.HasChildAccountError):
+            with db_transaction.atomic():
+                transaction.save()
+                split_1.transaction = transaction
+                split_2.transaction = transaction
+                split_1.save()
+                split_2.save()
+
+    def test_raises_exception_if_transaction_unbalanced(self):
         pass

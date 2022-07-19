@@ -23,3 +23,10 @@ def check_split_balance(sender, **kwargs):
     for split in kwargs['instance'].transaction.split_set.all():
         if split.amount <= 0:
             raise exceptions.ZeroAmountError
+
+
+@receiver(signals.post_save, sender=Split)
+def check_split_ac_has_child(sender, **kwargs):
+    split = kwargs['instance']
+    if split.account.has_child():
+        raise exceptions.HasChildAccountError

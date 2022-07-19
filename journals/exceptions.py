@@ -8,3 +8,7 @@ class TransactionUnbalancedError(JournalError):
 
 class ZeroAmountError(JournalError):
     pass
+
+
+class HasChildAccountError(JournalError):
+    pass
