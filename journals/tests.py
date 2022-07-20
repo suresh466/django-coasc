@@ -2,7 +2,8 @@ from django.test import TestCase
 from django.db import transaction as db_transaction
 
 from journals.models import Split, Transaction
-from journals import exceptions
+from journals import exceptions as journals_exceptions
+from accounts import exceptions as accounts_exceptions
 from accounts.models import ImpersonalAccount
 
 
@@ -80,7 +81,7 @@ class TransactionAndSplitModelTest(TestCase):
         split_1 = Split(account=ac_2, type_split='dr', amount=3000)
         split_2 = Split(account=ac_1, type_split='cr', amount=0)
 
-        with self.assertRaises(exceptions.ZeroAmountError):
+        with self.assertRaises(journals_exceptions.ZeroAmountError):
             with db_transaction.atomic():
                 transaction.save()
                 split_1.transaction = transaction
@@ -96,7 +97,7 @@ class TransactionAndSplitModelTest(TestCase):
         split_1 = Split(account=ac_2, type_split='dr', amount=4000)
         split_2 = Split(account=ac_1, type_split='cr', amount=4000)
 
-        with self.assertRaises(exceptions.HasChildAccountError):
+        with self.assertRaises(journals_exceptions.HasChildAccountError):
             with db_transaction.atomic():
                 transaction.save()
                 split_1.transaction = transaction
@@ -105,4 +106,23 @@ class TransactionAndSplitModelTest(TestCase):
                 split_2.save()
 
     def test_raises_exception_if_transaction_unbalanced(self):
-        pass
+        ac_1 = self.create_impersonal_account('Share pujji parent', 'LI', '10')
+        pa = self.create_impersonal_account('Nagad parent', 'AS', '80',)
+        ca_1 = self.create_impersonal_account('Nagad child1', 'LI', '80.1', pa)
+        ca_2 = self.create_impersonal_account('Nagad child2', 'LI', '80.2', pa)
+        transaction = self.create_transaction('first description')
+
+        with self.assertRaises(
+                accounts_exceptions.AccountingEquationViolationError):
+            self.create_split(transaction, ac_1, 'dr', 100)
+            self.create_split(transaction, ca_1, 'dr', 200)
+            self.create_split(transaction, ca_2, 'dr', 100)
+            self.create_split(transaction, ac_1, 'cr', 500)
+            self.create_split(transaction, ca_1, 'cr', 100)
+            self.create_split(transaction, ca_2, 'cr', 100)
+
+            self.assertEqual(ac_1.current_balance()['dr_sum'], 100)
+            self.assertEqual(pa.current_balance()['dr_sum'], 300)
+            self.assertEqual(ac_1.current_balance()['cr_sum'], 500)
+            self.assertEqual(pa.current_balance()['cr_sum'], 200)
+            ImpersonalAccount.validate_accounting_equation()
