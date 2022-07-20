@@ -92,7 +92,8 @@ class TransactionAndSplitModelTest(TestCase):
     def test_raises_exception_if_split_ac_has_child(self):
         ac_1 = self.create_impersonal_account('Share pujji', 'LI', '10')
         ac_2 = self.create_impersonal_account('Nagad hissab', 'AS', '80')
-        self.create_impersonal_account('Nagad child', 'AS', '80.1', ac_2)
+        ImpersonalAccount.objects.create(
+                name='Nagad child', code='80.1', parent_ac=ac_2)
         transaction = Transaction(description='first description')
         split_1 = Split(account=ac_2, type_split='dr', amount=4000)
         split_2 = Split(account=ac_1, type_split='cr', amount=4000)
@@ -108,8 +109,10 @@ class TransactionAndSplitModelTest(TestCase):
     def test_raises_exception_if_transaction_unbalanced(self):
         ac_1 = self.create_impersonal_account('Share pujji parent', 'LI', '10')
         pa = self.create_impersonal_account('Nagad parent', 'AS', '80',)
-        ca_1 = self.create_impersonal_account('Nagad child1', 'LI', '80.1', pa)
-        ca_2 = self.create_impersonal_account('Nagad child2', 'LI', '80.2', pa)
+        ca_1 = ImpersonalAccount.objects.create(
+                name='Nagad child1', code='80.1', parent_ac=pa)
+        ca_2 = ImpersonalAccount.objects.create(
+                name='Nagad child2', code='80.2', parent_ac=pa)
         transaction = self.create_transaction('first description')
 
         with self.assertRaises(
