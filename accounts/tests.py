@@ -1,22 +1,15 @@
 from django.test import TestCase
 from accounts.models import ImpersonalAccount
 
-# Create your tests here.
 
 class AccountModelTest(TestCase):
 
     def test_create_and_retreive_accounts(self):
         parent_ac = ImpersonalAccount.objects.create(
-                name='Kosh',
-                type_ac='LI',
-                code='20',
-        )
-        child_ac = ImpersonalAccount.objects.create(
-                name='Jageda kosh',
-                parent_ac=parent_ac,
-                type_ac='LI',
-                code='20.1',
-        )
+                name='Kosh', type_ac='LI', code='20',)
+        ImpersonalAccount.objects.create(
+                name='Jageda kosh', parent_ac=parent_ac, type_ac='LI',
+                code='20.1',)
 
         saved_accounts = ImpersonalAccount.objects.all()
 
