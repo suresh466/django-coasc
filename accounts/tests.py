@@ -16,6 +16,8 @@ class AccountModelTest(TestCase):
                 name='parent ac1', type_ac='LI', code='2')
         cls.child_ac1 = ImpersonalAccount.objects.create(
                 name='child ac1', parent_ac=cls.parent_ac1, code='2.1')
+        cls.child_ac2 = ImpersonalAccount.objects.create(
+                name='child ac2', parent_ac=cls.parent_ac1, code='2.2')
 
         cls.transaction1 = Transaction.objects.create(
                 description='transaction1')
@@ -23,7 +25,7 @@ class AccountModelTest(TestCase):
     def test_create_and_retreive_accounts(self):
         saved_accounts = ImpersonalAccount.objects.all()
 
-        self.assertEqual(saved_accounts.count(), 3)
+        self.assertEqual(saved_accounts.count(), 4)
         self.assertEqual(saved_accounts[0].name, 'single ac1')
         self.assertEqual(saved_accounts[0].parent_ac, None)
         self.assertEqual(saved_accounts[0].type_ac, 'AS')
@@ -54,3 +56,46 @@ class AccountModelTest(TestCase):
             Split.objects.create(
                     transaction=self.transaction1, account=self.parent_ac1,
                     type_split='cr', amount=100)
+
+    def test_who_am_i(self):
+        ac1 = self.single_ac1.who_am_i()
+        ac2 = self.parent_ac1.who_am_i()
+        ac3 = self.child_ac1.who_am_i()
+
+        self.assertTrue(ac1['single'] is True)
+        self.assertTrue(ac2['parent'] is True)
+        self.assertTrue(ac3['child'] is True)
+
+    def test_current_balance(self):
+        Split.objects.create(
+                transaction=self.transaction1, account=self.single_ac1,
+                type_split='dr', amount=100)
+        Split.objects.create(
+                transaction=self.transaction1, account=self.single_ac1,
+                type_split='cr', amount=50)
+        Split.objects.create(
+                transaction=self.transaction1, account=self.child_ac1,
+                type_split='dr', amount=200)
+        Split.objects.create(
+                transaction=self.transaction1, account=self.child_ac1,
+                type_split='cr', amount=150)
+        Split.objects.create(
+                transaction=self.transaction1, account=self.child_ac2,
+                type_split='dr', amount=300)
+        Split.objects.create(
+                transaction=self.transaction1, account=self.child_ac2,
+                type_split='cr', amount=250)
+
+        single_ac1_balance = self.single_ac1.current_balance()
+        child_ac1_balance = self.child_ac1.current_balance()
+        child_ac2_balance = self.child_ac2.current_balance()
+        parent_ac1_balance = self.parent_ac1.current_balance()
+
+        self.assertEqual(single_ac1_balance['dr_sum'], 100)
+        self.assertEqual(single_ac1_balance['cr_sum'], 50)
+        self.assertEqual(child_ac1_balance['dr_sum'], 200)
+        self.assertEqual(child_ac1_balance['cr_sum'], 150)
+        self.assertEqual(child_ac2_balance['dr_sum'], 300)
+        self.assertEqual(child_ac2_balance['cr_sum'], 250)
+        self.assertEqual(parent_ac1_balance['dr_sum'], 500)
+        self.assertEqual(parent_ac1_balance['cr_sum'], 400)
