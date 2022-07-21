@@ -7,11 +7,22 @@ from accounts import exceptions
 
 
 class ImpersonalAccount(models.Model):
+    ASSET = 'AS'
+    LIABILITY = 'LI'
+    INCOME = 'IN'
+    EXPENSES = 'EX'
+    TYPE_AC_CHOICES = [
+        (ASSET, 'Asset'),
+        (LIABILITY, 'Liability'),
+        (INCOME, 'Income'),
+        (EXPENSES, 'Expense'),
+    ]
     name = models.CharField(max_length=255)
     parent_ac = models.ForeignKey(
-            'self', null=True, default=None, on_delete=models.DO_NOTHING)
-    type_ac = models.CharField(max_length=2)
-    code = models.CharField(max_length=256)
+            'self', null=True, blank=True, default=None,
+            on_delete=models.PROTECT)
+    type_ac = models.CharField(max_length=2, choices=TYPE_AC_CHOICES)
+    code = models.CharField(max_length=256, blank=True)
 
     def save(self, *args, **kwargs):
         if self.parent_ac and self.type_ac:
