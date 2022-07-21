@@ -54,13 +54,6 @@ class ImpersonalAccount(models.Model):
                     cr_sum=Sum('amount'))['cr_sum'] or Decimal(0)
         return {'dr_sum': dr_sum, 'cr_sum': cr_sum}
 
-    # get rid of this method or the next
-    def has_child(self):
-        if self.impersonalaccount_set.count() > 0:
-            return True
-        else:
-            return False
-
     def who_am_i(self):
         ac = dict.fromkeys(['parent', 'child', 'single'], None)
         if self.impersonalaccount_set.count() > 0:
