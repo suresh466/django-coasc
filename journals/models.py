@@ -12,10 +12,16 @@ class Transaction(models.Model):
 
 
 class Split(models.Model):
+    DEBIT = 'dr'
+    CREDIT = 'cr'
+    TYPE_SPLIT_CHOICES = [
+        (DEBIT, 'Debit'),
+        (DEBIT, 'Credit'),
+    ]
     transaction = models.ForeignKey(
-            Transaction, default=None, on_delete=models.CASCADE,)
-    account = models.ForeignKey(ImpersonalAccount, on_delete=models.DO_NOTHING)
-    type_split = models.CharField(max_length=2)
+            Transaction, on_delete=models.PROTECT)
+    account = models.ForeignKey(ImpersonalAccount, on_delete=models.PROTECT)
+    type_split = models.CharField(max_length=2, choices=TYPE_SPLIT_CHOICES)
     amount = models.DecimalField(decimal_places=2, max_digits=11)
 
 
