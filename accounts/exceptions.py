@@ -8,3 +8,7 @@ class AccountingEquationViolationError(AccountError):
 
 class AccountTypeOnChildAccountError(AccountError):
     pass
+
+
+class TransactionOnParentAcError(AccountError):
+    pass
