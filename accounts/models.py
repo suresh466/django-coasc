@@ -73,17 +73,24 @@ class ImpersonalAccount(models.Model):
         if ac['single'] or ac['child']:
             return self.__simple_balance()
 
-    @classmethod
-    def validate_accounting_equation(cls):
+    @staticmethod
+    def total_current_balance():
         accounts = ImpersonalAccount.objects.all()
-        dr_sum = Decimal(0)
-        cr_sum = Decimal(0)
+        total_dr_sum = Decimal(0)
+        total_cr_sum = Decimal(0)
         for account in accounts:
             ac = account.who_am_i()
             if ac['child']:
                 continue
             balances = account.current_balance()
-            dr_sum += balances['dr_sum']
-            cr_sum += balances['cr_sum']
-        if dr_sum != cr_sum:
+            total_dr_sum += balances['dr_sum']
+            total_cr_sum += balances['cr_sum']
+        return {'total_dr_sum': total_dr_sum, 'total_cr_sum': total_cr_sum}
+
+    @classmethod
+    def validate_accounting_equation(cls):
+        total_balances = cls.total_current_balance()
+        total_dr_sum = total_balances['total_dr_sum']
+        total_cr_sum = total_balances['total_cr_sum']
+        if total_dr_sum != total_cr_sum:
             raise exceptions.AccountingEquationViolationError
