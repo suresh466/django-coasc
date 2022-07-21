@@ -1,8 +1,7 @@
 from django.test import TestCase
 
 from journals.models import Split, Transaction
-from journals import exceptions as journal_exceptions
-from accounts import exceptions as account_exceptions
+from journals import exceptions
 from accounts.models import ImpersonalAccount
 
 
@@ -47,21 +46,10 @@ class TransactionAndSplitModelTest(TestCase):
         self.assertEqual(saved_split[1].amount, 100)
 
     def test_raises_exception_if_split_amount_zero(self):
-        with self.assertRaises(journal_exceptions.ZeroAmountError):
+        with self.assertRaises(exceptions.ZeroAmountError):
             Split.objects.create(
                     transaction=self.transaction1, account=self.single_ac1,
                     type_split='dr', amount=100)
             Split.objects.create(
                     transaction=self.transaction1, account=self.child_ac1,
                     type_split='cr', amount=0)
-
-    def test_raises_exception_if_transaction_unbalanced(self):
-        with self.assertRaises(
-                account_exceptions.AccountingEquationViolationError):
-            Split.objects.create(
-                    transaction=self.transaction1, account=self.single_ac1,
-                    type_split='dr', amount=100)
-            Split.objects.create(
-                    transaction=self.transaction1, account=self.child_ac1,
-                    type_split='cr', amount=50)
-            ImpersonalAccount.validate_accounting_equation()
