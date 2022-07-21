@@ -100,6 +100,34 @@ class AccountModelTest(TestCase):
         self.assertEqual(parent_ac1_balance['dr_sum'], 500)
         self.assertEqual(parent_ac1_balance['cr_sum'], 400)
 
+    def test_total_current_balance(self):
+        Split.objects.create(
+                transaction=self.transaction1, account=self.single_ac1,
+                type_split='dr', amount=100)
+        Split.objects.create(
+                transaction=self.transaction1, account=self.child_ac1,
+                type_split='dr', amount=200)
+        Split.objects.create(
+                transaction=self.transaction1, account=self.child_ac2,
+                type_split='dr', amount=300)
+        Split.objects.create(
+                transaction=self.transaction1, account=self.single_ac1,
+                type_split='cr', amount=50)
+        Split.objects.create(
+                transaction=self.transaction1, account=self.child_ac1,
+                type_split='cr', amount=150)
+        Split.objects.create(
+                transaction=self.transaction1, account=self.child_ac2,
+                type_split='cr', amount=250)
+
+        total_dr_sum = ImpersonalAccount.total_current_balance()[
+                'total_dr_sum']
+        total_cr_sum = ImpersonalAccount.total_current_balance()[
+                'total_cr_sum']
+
+        self.assertEqual(total_dr_sum, 600)
+        self.assertEqual(total_cr_sum, 450)
+
     def test_validate_accounting_equation(self):
         with self.assertRaises(
                 exceptions.AccountingEquationViolationError):
