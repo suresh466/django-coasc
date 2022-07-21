@@ -13,6 +13,13 @@ class ImpersonalAccount(models.Model):
     type_ac = models.CharField(max_length=2)
     code = models.CharField(max_length=256)
 
+    def save(self, *args, **kwargs):
+        if self.parent_ac and self.type_ac:
+            raise exceptions.AccountTypeOnChildAccountError
+        if self.parent_ac:
+            self.type_ac = self.parent_ac.type_ac
+        super(ImpersonalAccount, self).save(*args, **kwargs)
+
     def __simple_balance(self):
         account_splits = self.split_set.all()
         dr_splits = account_splits.filter(type_split='dr')

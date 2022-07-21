@@ -3,7 +3,8 @@ from django.dispatch import receiver
 from django.db.models import signals
 
 from accounts.models import ImpersonalAccount
-from journals import exceptions
+from journals import exceptions as journal_exceptions
+from accounts import exceptions as account_exceptions
 
 
 class Transaction(models.Model):
@@ -22,11 +23,11 @@ class Split(models.Model):
 def check_split_balance(sender, **kwargs):
     for split in kwargs['instance'].transaction.split_set.all():
         if split.amount <= 0:
-            raise exceptions.ZeroAmountError
+            raise journal_exceptions.ZeroAmountError
 
 
 @receiver(signals.post_save, sender=Split)
 def check_split_ac_has_child(sender, **kwargs):
     split = kwargs['instance']
-    if split.account.has_child():
-        raise exceptions.HasChildAccountError
+    if (split.account.who_am_i())['parent']:
+        raise account_exceptions.TransactionOnParentAcError

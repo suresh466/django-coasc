@@ -4,3 +4,11 @@ class AccountError(Exception):
 
 class AccountingEquationViolationError(AccountError):
     pass
+
+
+class AccountTypeOnChildAccountError(AccountError):
+    pass
+
+
+class TransactionOnParentAcError(AccountError):
+    pass
