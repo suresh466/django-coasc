@@ -22,7 +22,8 @@ class ImpersonalAccount(models.Model):
             'self', null=True, blank=True, default=None,
             on_delete=models.PROTECT)
     type_ac = models.CharField(max_length=2, choices=TYPE_AC_CHOICES)
-    code = models.CharField(max_length=256, blank=True)
+    code = models.CharField(
+            max_length=255, blank=True, null=True, default=None, unique=True)
 
     def save(self, *args, **kwargs):
         if self.parent_ac and self.type_ac:
