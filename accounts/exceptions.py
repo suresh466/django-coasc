@@ -12,3 +12,7 @@ class AccountTypeOnChildAccountError(AccountError):
 
 class TransactionOnParentAcError(AccountError):
     pass
+
+
+class OrphanAccountCreationError(AccountError):
+    pass
