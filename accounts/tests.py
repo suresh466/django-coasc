@@ -138,3 +138,8 @@ class AccountModelTest(TestCase):
                     transaction=self.transaction1, account=self.child_ac1,
                     type_split='cr', amount=50)
             ImpersonalAccount.validate_accounting_equation()
+
+    def test_raises_exception_if_ac_has_no_parent_and_type_ac(self):
+        with self.assertRaises(exceptions.OrphanAccountCreationError):
+            ImpersonalAccount.objects.create(
+                    name='orphan_ac1', code='0')

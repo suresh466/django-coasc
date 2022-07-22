@@ -29,6 +29,8 @@ class ImpersonalAccount(models.Model):
     def save(self, *args, **kwargs):
         if self.parent_ac and self.type_ac:
             raise exceptions.AccountTypeOnChildAccountError
+        if not self.parent_ac and not self.type_ac:
+            raise exceptions.OrphanAccountCreationError
         if self.parent_ac:
             self.type_ac = self.parent_ac.type_ac
         super(ImpersonalAccount, self).save(*args, **kwargs)
