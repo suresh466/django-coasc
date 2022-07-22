@@ -16,3 +16,7 @@ class TransactionOnParentAcError(AccountError):
 
 class OrphanAccountCreationError(AccountError):
     pass
+
+
+class SelfReferencingError(AccountError):
+    pass
