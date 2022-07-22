@@ -21,7 +21,8 @@ class ImpersonalAccount(models.Model):
     parent_ac = models.ForeignKey(
             'self', null=True, blank=True, default=None,
             on_delete=models.PROTECT)
-    type_ac = models.CharField(max_length=2, choices=TYPE_AC_CHOICES)
+    type_ac = models.CharField(
+            max_length=2, blank=True, choices=TYPE_AC_CHOICES)
     code = models.CharField(
             max_length=255, blank=True, null=True, default=None, unique=True)
 
