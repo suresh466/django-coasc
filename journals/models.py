@@ -25,15 +25,12 @@ class Split(models.Model):
     amount = models.DecimalField(decimal_places=2, max_digits=11)
 
 
-@receiver(signals.post_save, sender=Split)
-def check_split_balance(sender, **kwargs):
-    for split in kwargs['instance'].transaction.split_set.all():
-        if split.amount <= 0:
-            raise journal_exceptions.ZeroAmountError
-
-
-@receiver(signals.post_save, sender=Split)
-def check_split_ac_has_child(sender, **kwargs):
-    split = kwargs['instance']
-    if (split.account.who_am_i())['parent']:
-        raise account_exceptions.TransactionOnParentAcError
+@receiver(signals.pre_save, sender=Split)
+def check_for_exceptions(sender, **kwargs):
+    split_instance = kwargs['instance']
+    if (split_instance.account.who_am_i())['parent']:
+        raise account_exceptions.TransactionOnParentAcError(
+                'transaction on parent not allowed')
+    if split_instance.amount <= 0:
+        raise journal_exceptions.ZeroAmountError(
+                'amount must be greater than 0')

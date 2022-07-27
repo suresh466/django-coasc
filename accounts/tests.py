@@ -145,8 +145,8 @@ class AccountModelTest(TestCase):
                     name='orphan_ac1', code='0')
 
     def test_raises_exception_if_ac_refrences_self_as_parent_ac(self):
+        self_referencing_ac1 = ImpersonalAccount.objects.create(
+                name='self_referencing_ac1', type_ac='AS', code='0')
         with self.assertRaises(exceptions.SelfReferencingError):
-            self_referencing_ac1 = ImpersonalAccount.objects.create(
-                    name='self_referencing_ac1', type_ac='AS', code='0')
             self_referencing_ac1.parent_ac = self_referencing_ac1
             self_referencing_ac1.save()

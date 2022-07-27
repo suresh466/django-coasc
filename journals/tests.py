@@ -46,10 +46,10 @@ class TransactionAndSplitModelTest(TestCase):
         self.assertEqual(saved_split[1].amount, 100)
 
     def test_raises_exception_if_split_amount_zero(self):
+        Split.objects.create(
+                transaction=self.transaction1, account=self.single_ac1,
+                type_split='dr', amount=100)
         with self.assertRaises(exceptions.ZeroAmountError):
-            Split.objects.create(
-                    transaction=self.transaction1, account=self.single_ac1,
-                    type_split='dr', amount=100)
             Split.objects.create(
                     transaction=self.transaction1, account=self.child_ac1,
                     type_split='cr', amount=0)
