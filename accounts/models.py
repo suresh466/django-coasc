@@ -67,13 +67,13 @@ class ImpersonalAccount(models.Model):
 
     def who_am_i(self):
         ac = dict.fromkeys(['parent', 'child', 'single'], None)
-        if self.impersonalaccount_set.count() > 0:
+        if self.impersonalaccount_set.exists():
             ac['parent'] = True
             return ac
         if self.parent_ac:
             ac['child'] = True
             return ac
-        if self.impersonalaccount_set.count() == 0 and not self.parent_ac:
+        if not self.impersonalaccount_set.exists() and not self.parent_ac:
             ac['single'] = True
             return ac
 
