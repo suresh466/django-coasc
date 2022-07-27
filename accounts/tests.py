@@ -47,7 +47,7 @@ class AccountModelTest(TestCase):
                     name='child ac2', parent_ac=self.parent_ac1, type_ac='LI',
                     code='2.2')
 
-    def test_raises_exception_if_root_ac_selected_as_a_split_ac(self):
+    def test_raises_exception_if_parent_ac_selected_as_a_split_ac(self):
         Split.objects.create(
                 transaction=self.transaction1, account=self.single_ac1,
                 type_split='dr', amount=100)
