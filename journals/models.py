@@ -16,7 +16,7 @@ class Split(models.Model):
     CREDIT = 'cr'
     TYPE_SPLIT_CHOICES = [
         (DEBIT, 'Debit'),
-        (DEBIT, 'Credit'),
+        (CREDIT, 'Credit'),
     ]
     transaction = models.ForeignKey(
             Transaction, on_delete=models.PROTECT)
