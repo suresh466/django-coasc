@@ -52,6 +52,10 @@ class ImpersonalAccount(models.Model):
         dr_sum = Decimal(0)
         cr_sum = Decimal(0)
         for account in self.impersonalaccount_set.all():
+            if account.who_am_i()['parent']:
+                recursion_balances = account.__accumulated_balance()
+                dr_sum += recursion_balances['dr_sum']
+                cr_sum += recursion_balances['cr_sum']
             account_splits = account.split_set.all()
             dr_splits = account_splits.filter(type_split='dr')
             cr_splits = account_splits.filter(type_split='cr')
