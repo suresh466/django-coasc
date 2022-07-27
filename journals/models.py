@@ -29,6 +29,8 @@ class Split(models.Model):
 def check_for_exceptions(sender, **kwargs):
     split_instance = kwargs['instance']
     if (split_instance.account.who_am_i())['parent']:
-        raise account_exceptions.TransactionOnParentAcError
+        raise account_exceptions.TransactionOnParentAcError(
+                'transaction on parent not allowed')
     if split_instance.amount <= 0:
-        raise journal_exceptions.ZeroAmountError
+        raise journal_exceptions.ZeroAmountError(
+                'amount must be greater than 0')

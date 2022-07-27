@@ -28,12 +28,14 @@ class ImpersonalAccount(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.parent_ac and not self.type_ac:
-            raise exceptions.OrphanAccountCreationError
+            raise exceptions.OrphanAccountCreationError(
+                    'must have a parent or type')
         if self.parent_ac == self:
             raise exceptions.SelfReferencingError(
                     'self cannot be a parent of self')
         if self.parent_ac and self.type_ac:
-            raise exceptions.AccountTypeOnChildAccountError
+            raise exceptions.AccountTypeOnChildAccountError(
+                    'manually setting type on a child not allowed')
         if self.parent_ac:
             self.type_ac = self.parent_ac.type_ac
         super(ImpersonalAccount, self).save(*args, **kwargs)
@@ -104,4 +106,5 @@ class ImpersonalAccount(models.Model):
         total_dr_sum = total_balances['total_dr_sum']
         total_cr_sum = total_balances['total_cr_sum']
         if total_dr_sum != total_cr_sum:
-            raise exceptions.AccountingEquationViolationError
+            raise exceptions.AccountingEquationViolationError(
+                    'Dr, Cr side not balanced; equation, "AS=LI+CA" not true;')
