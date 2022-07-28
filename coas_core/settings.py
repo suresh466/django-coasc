@@ -77,7 +77,7 @@ WSGI_APPLICATION = 'coas_core.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'coas',
+        'NAME': 'coasc',
         'USER': 'hawk',
         'PASSWORD': 'hawk',
         'HOST': 'localhost',
