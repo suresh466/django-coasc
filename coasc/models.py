@@ -6,7 +6,7 @@ from django.db.models import Sum
 from django.dispatch import receiver
 from django.db.models import signals
 
-from coas_core import exceptions
+from coasc import exceptions
 
 
 class ImpersonalAccount(models.Model):

@@ -1,8 +1,8 @@
 from django.test import TestCase
 
-from coas_core.models import ImpersonalAccount
-from coas_core import exceptions
-from coas_core.models import Transaction, Split
+from coasc.models import ImpersonalAccount
+from coasc import exceptions
+from coasc.models import Transaction, Split
 
 
 class AccountModelTest(TestCase):
