@@ -20,3 +20,11 @@ class OrphanAccountCreationError(AccountError):
 
 class SelfReferencingError(AccountError):
     pass
+
+
+class JournalError(Exception):
+    pass
+
+
+class ZeroAmountError(JournalError):
+    pass
