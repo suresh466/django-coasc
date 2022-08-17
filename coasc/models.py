@@ -34,33 +34,26 @@ class ImpersonalAccount(models.Model):
         return string
 
     def __simple_balance(self):
-        account_splits = self.split_set.all()
-        dr_splits = account_splits.filter(type_split='dr')
-        cr_splits = account_splits.filter(type_split='cr')
-        dr_sum = dr_splits.aggregate(
-                dr_sum=Sum('amount'))['dr_sum'] or Decimal(0)
-        cr_sum = cr_splits.aggregate(
-                cr_sum=Sum('amount'))['cr_sum'] or Decimal(0)
-        difference = dr_sum - cr_sum
-        return {'dr_sum': dr_sum, 'cr_sum': cr_sum, 'difference': difference}
+        sps = self.split_set.all()
+        dr_sps = sps.filter(type_split='dr')
+        cr_sps = sps.filter(type_split='cr')
+
+        dr_sum = dr_sps.aggregate(dr_sum=Sum('amount'))['dr_sum'] or 0
+        cr_sum = cr_sps.aggregate(cr_sum=Sum('amount'))['cr_sum'] or 0
+        diff = dr_sum - cr_sum
+
+        return {'dr_sum': dr_sum, 'cr_sum': cr_sum, 'difference': diff}
 
     def __accumulated_balance(self):
-        dr_sum = Decimal(0)
-        cr_sum = Decimal(0)
-        for account in self.impersonalaccount_set.all():
-            if account.who_am_i()['parent']:
-                recursion_balances = account.__accumulated_balance()
-                dr_sum += recursion_balances['dr_sum']
-                cr_sum += recursion_balances['cr_sum']
-            account_splits = account.split_set.all()
-            dr_splits = account_splits.filter(type_split='dr')
-            cr_splits = account_splits.filter(type_split='cr')
-            dr_sum += dr_splits.aggregate(
-                    dr_sum=Sum('amount'))['dr_sum'] or Decimal(0)
-            cr_sum += cr_splits.aggregate(
-                    cr_sum=Sum('amount'))['cr_sum'] or Decimal(0)
-        difference = dr_sum - cr_sum
-        return {'dr_sum': dr_sum, 'cr_sum': cr_sum, 'difference': difference}
+        sps = Split.objects.filter(account__parent_ac=self)
+        dr_sps = sps.filter(type_split='dr')
+        cr_sps = sps.filter(type_split='cr')
+
+        dr_sum = dr_sps.aggregate(dr_sum=Sum('amount'))['dr_sum'] or 0
+        cr_sum = cr_sps.aggregate(cr_sum=Sum('amount'))['cr_sum'] or 0
+        diff = dr_sum - cr_sum
+
+        return {'dr_sum': dr_sum, 'cr_sum': cr_sum, 'difference': diff}
 
     def who_am_i(self):
         ac = dict.fromkeys(['parent', 'child', 'single'], None)
@@ -90,7 +83,7 @@ class ImpersonalAccount(models.Model):
         if type_ac is None:
             accounts = cls.objects.filter(parent_ac=None)
         else:
-            accounts = cls.objects.filter(type_ac=type_ac, parent_ac=None)
+            accounts = cls.objects.filter(type_ac=type_ac)
 
         tds = Decimal(0)
         tcs = Decimal(0)
