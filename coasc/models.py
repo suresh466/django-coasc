@@ -65,7 +65,7 @@ class ImpersonalAccount(models.Model):
         return {'dr_sum': dr_sum, 'cr_sum': cr_sum, 'diff': diff}
 
     @classmethod
-    def total_current_balance(cls, type_ac=None):
+    def total_bal(cls, type_ac=None):
         if type_ac is None:
             accounts = cls.objects.filter(parent_ac=None)
         else:
@@ -83,7 +83,7 @@ class ImpersonalAccount(models.Model):
 
     @classmethod
     def validate_accounting_equation(cls):
-        total_bals = cls.total_current_balance()
+        total_bals = cls.total_bal()
         if total_bals['diff'] != 0:
             raise exceptions.AccountingEquationViolationError(
                     'Dr, Cr side not balanced; equation, "AS=LI+CA" not true;')

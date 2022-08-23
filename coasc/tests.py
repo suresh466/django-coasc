@@ -102,7 +102,7 @@ class AccountModelTest(TestCase):
         self.assertEqual(parent_ac1_balance['dr_sum'], 500)
         self.assertEqual(parent_ac1_balance['cr_sum'], 400)
 
-    def test_total_current_balance_with_no_arguments(self):
+    def test_total_bal_with_no_arguments(self):
         Split.objects.create(
                 transaction=self.transaction1, account=self.single_ac1,
                 type_split='dr', amount=100)
@@ -122,15 +122,15 @@ class AccountModelTest(TestCase):
                 transaction=self.transaction1, account=self.child_ac2,
                 type_split='cr', amount=250)
 
-        total_dr_sum = ImpersonalAccount.total_current_balance()[
+        total_dr_sum = ImpersonalAccount.total_bal()[
                 'total_dr_sum']
-        total_cr_sum = ImpersonalAccount.total_current_balance()[
+        total_cr_sum = ImpersonalAccount.total_bal()[
                 'total_cr_sum']
 
         self.assertEqual(total_dr_sum, 600)
         self.assertEqual(total_cr_sum, 450)
 
-    def test_total_current_balance_with_arguments(self):
+    def test_total_bal_with_arguments(self):
         Split.objects.create(
                 transaction=self.transaction1, account=self.single_ac1,
                 type_split='dr', amount=100)
@@ -150,26 +150,26 @@ class AccountModelTest(TestCase):
                 transaction=self.transaction1, account=self.child_ac2,
                 type_split='cr', amount=450)
 
-        total_current_balance = ImpersonalAccount.total_current_balance(
+        total_bal = ImpersonalAccount.total_bal(
                 type_ac='AS')
-        total_current_balance1 = ImpersonalAccount.total_current_balance(
+        total_bal1 = ImpersonalAccount.total_bal(
                 type_ac='LI')
 
-        expected_total_current_balance = {
+        expected_total_bal = {
                 'total_dr_sum': 100,
                 'total_cr_sum': 50,
                 'diff': 50
         }
-        expected_total_current_balance1 = {
+        expected_total_bal1 = {
                 'total_dr_sum': 500,
                 'total_cr_sum': 600,
                 'diff': -100
         }
 
         self.assertEqual(
-                total_current_balance, expected_total_current_balance)
+                total_bal, expected_total_bal)
         self.assertEqual(
-                total_current_balance1, expected_total_current_balance1)
+                total_bal1, expected_total_bal1)
 
     def test_validate_accounting_equation(self):
         with self.assertRaises(
