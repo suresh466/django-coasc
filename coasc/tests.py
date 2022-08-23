@@ -150,26 +150,26 @@ class AccountModelTest(TestCase):
                 transaction=self.transaction1, account=self.child_ac2,
                 type_split='cr', amount=450)
 
-        total_current_balance1 = ImpersonalAccount.total_current_balance(
+        total_current_balance = ImpersonalAccount.total_current_balance(
                 type_ac='AS')
-        total_current_balance2 = ImpersonalAccount.total_current_balance(
+        total_current_balance1 = ImpersonalAccount.total_current_balance(
                 type_ac='LI')
 
-        expected_total_current_balance1 = {
+        expected_total_current_balance = {
                 'total_dr_sum': 100,
                 'total_cr_sum': 50,
-                'difference': 50.00
+                'diff': 50
         }
-        expected_total_current_balance2 = {
+        expected_total_current_balance1 = {
                 'total_dr_sum': 500,
                 'total_cr_sum': 600,
-                'difference': -100
+                'diff': -100
         }
 
         self.assertEqual(
-                total_current_balance1, expected_total_current_balance1)
+                total_current_balance, expected_total_current_balance)
         self.assertEqual(
-                total_current_balance2, expected_total_current_balance2)
+                total_current_balance1, expected_total_current_balance1)
 
     def test_validate_accounting_equation(self):
         with self.assertRaises(

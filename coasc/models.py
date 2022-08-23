@@ -42,7 +42,7 @@ class ImpersonalAccount(models.Model):
         cr_sum = cr_sps.aggregate(cr_sum=Sum('amount'))['cr_sum'] or 0
         diff = dr_sum - cr_sum
 
-        return {'dr_sum': dr_sum, 'cr_sum': cr_sum, 'difference': diff}
+        return {'dr_sum': dr_sum, 'cr_sum': cr_sum, 'diff': diff}
 
     def __accumulated_balance(self):
         sps = Split.objects.filter(account__parent_ac=self)
@@ -53,7 +53,7 @@ class ImpersonalAccount(models.Model):
         cr_sum = cr_sps.aggregate(cr_sum=Sum('amount'))['cr_sum'] or 0
         diff = dr_sum - cr_sum
 
-        return {'dr_sum': dr_sum, 'cr_sum': cr_sum, 'difference': diff}
+        return {'dr_sum': dr_sum, 'cr_sum': cr_sum, 'diff': diff}
 
     def who_am_i(self):
         ac = dict.fromkeys(['parent', 'child', 'single'], None)
@@ -88,17 +88,17 @@ class ImpersonalAccount(models.Model):
         tds = Decimal(0)
         tcs = Decimal(0)
         for account in accounts:
-            balances = account.current_balance()
-            tds += balances['dr_sum']
-            tcs += balances['cr_sum']
+            bals = account.current_balance()
+            tds += bals['dr_sum']
+            tcs += bals['cr_sum']
 
         diff = tds - tcs
-        return {'total_dr_sum': tds, 'total_cr_sum': tcs, 'difference': diff}
+        return {'total_dr_sum': tds, 'total_cr_sum': tcs, 'diff': diff}
 
     @classmethod
     def validate_accounting_equation(cls):
-        total_balances = cls.total_current_balance()
-        if total_balances['difference'] != 0:
+        total_bals = cls.total_current_balance()
+        if total_bals['diff'] != 0:
             raise exceptions.AccountingEquationViolationError(
                     'Dr, Cr side not balanced; equation, "AS=LI+CA" not true;')
 
@@ -148,10 +148,9 @@ class Split(models.Model):
 
 @receiver(signals.pre_save, sender=Split)
 def raise_exceptions_split(sender, **kwargs):
-    split_instance = kwargs['instance']
-    if (split_instance.account.who_am_i())['parent']:
+    sp_instance = kwargs['instance']
+    if (sp_instance.account.who_am_i())['parent']:
         raise exceptions.TransactionOnParentAcError(
                 'transaction on parent not allowed')
-    if split_instance.amount <= 0:
-        raise exceptions.ZeroAmountError(
-                'amount must be greater than 0')
+    if sp_instance.amount <= 0:
+        raise exceptions.ZeroAmountError('amount must be greater than 0')
