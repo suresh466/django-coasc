@@ -37,11 +37,9 @@ class ImpersonalAccount(models.Model):
         if not self.t_ac:
             ac_is['child'] = True
             return ac_is
-
         elif self.impersonalaccount_set.exists():
             ac_is['parent'] = True
             return ac_is
-
         elif self.t_ac and not self.impersonalaccount_set.exists():
             ac_is['single'] = True
             return ac_is
@@ -76,8 +74,8 @@ class ImpersonalAccount(models.Model):
             bals = ac.bal()
             tds += bals['dr_sum']
             tcs += bals['cr_sum']
-
         diff = tds - tcs
+
         return {'total_dr_sum': tds, 'total_cr_sum': tcs, 'diff': diff}
 
     @classmethod

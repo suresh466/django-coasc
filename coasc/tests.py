@@ -10,9 +10,9 @@ class AccountModelTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.single = ImpersonalAccount.objects.create(
-                name='single', t_ac='AS', code='1')
+                name='single', t_ac='LI', code='1')
         cls.parent = ImpersonalAccount.objects.create(
-                name='parent', t_ac='LI', code='2')
+                name='parent', t_ac='EX', code='2')
         cls.child = ImpersonalAccount.objects.create(
                 name='child', p_ac=cls.parent, code='2.1')
         cls.child1 = ImpersonalAccount.objects.create(
@@ -20,22 +20,23 @@ class AccountModelTest(TestCase):
 
         cls.tx = Transaction.objects.create(desc='tx')
 
+        Split.objects.create(tx=cls.tx, ac=cls.single, t_sp='dr', am=6)
+        Split.objects.create(tx=cls.tx, ac=cls.single, t_sp='dr', am=9)
+        Split.objects.create(tx=cls.tx, ac=cls.single, t_sp='cr', am=6)
+        Split.objects.create(tx=cls.tx, ac=cls.single, t_sp='cr', am=9)
+
+        Split.objects.create(tx=cls.tx, ac=cls.child, t_sp='dr', am=6)
+        Split.objects.create(tx=cls.tx, ac=cls.child, t_sp='cr', am=9)
+
+        Split.objects.create(tx=cls.tx, ac=cls.child1, t_sp='dr', am=9)
+        Split.objects.create(tx=cls.tx, ac=cls.child1, t_sp='cr', am=6)
+
     def test_create_and_retreive(self):
         saved_accounts = ImpersonalAccount.objects.all()
 
         self.assertEqual(saved_accounts.count(), 4)
-        self.assertEqual(saved_accounts[0].name, 'single')
-        self.assertEqual(saved_accounts[0].p_ac, None)
-        self.assertEqual(saved_accounts[0].t_ac, 'AS')
         self.assertEqual(saved_accounts[0].code, '1')
-
-        self.assertEqual(saved_accounts[1].name, 'parent')
-        self.assertEqual(saved_accounts[1].p_ac, None)
-        self.assertEqual(saved_accounts[1].t_ac, 'LI')
         self.assertEqual(saved_accounts[1].code, '2')
-
-        self.assertEqual(saved_accounts[2].name, 'child')
-        self.assertEqual(saved_accounts[2].p_ac, self.parent)
         self.assertEqual(saved_accounts[2].code, '2.1')
 
     def test_raises_exception_if_t_ac_set_on_child(self):
@@ -58,69 +59,44 @@ class AccountModelTest(TestCase):
         self.assertTrue(ac1_is['parent'])
         self.assertTrue(ac2_is['child'])
 
-        self.assertTrue(not ac_is['parent'])
-        self.assertTrue(not ac1_is['child'])
-        self.assertTrue(not ac2_is['single'])
-
     def test_bal(self):
-        Split.objects.create(tx=self.tx, ac=self.single, t_sp='dr', am=100)
-        Split.objects.create(tx=self.tx, ac=self.single, t_sp='cr', am=50)
-        Split.objects.create(tx=self.tx, ac=self.child, t_sp='dr', am=200)
-        Split.objects.create(tx=self.tx, ac=self.child, t_sp='cr', am=150)
-        Split.objects.create(tx=self.tx, ac=self.child1, t_sp='dr', am=300)
-        Split.objects.create(tx=self.tx, ac=self.child1, t_sp='cr', am=250)
         single_bal = self.single.bal()
         child_bal = self.child.bal()
         child1_bal = self.child1.bal()
         parent_bal = self.parent.bal()
 
-        self.assertEqual(single_bal['dr_sum'], 100)
-        self.assertEqual(single_bal['cr_sum'], 50)
-        self.assertEqual(child_bal['dr_sum'], 200)
-        self.assertEqual(child_bal['cr_sum'], 150)
-        self.assertEqual(child1_bal['dr_sum'], 300)
-        self.assertEqual(child1_bal['cr_sum'], 250)
-        self.assertEqual(parent_bal['dr_sum'], 500)
-        self.assertEqual(parent_bal['cr_sum'], 400)
+        expected_single_bal = {'dr_sum': 15, 'cr_sum': 15, 'diff': 0}
+        expected_child_bal = {'dr_sum': 6, 'cr_sum': 9, 'diff': -3}
+        expected_child1_bal = {'dr_sum': 9, 'cr_sum': 6, 'diff': 3}
+        expected_parent_bal = {'dr_sum': 15, 'cr_sum': 15, 'diff': 0}
 
-    def test_total_bal_with_no_arguments(self):
-        Split.objects.create(tx=self.tx, ac=self.single, t_sp='dr', am=100)
-        Split.objects.create(tx=self.tx, ac=self.single, t_sp='cr', am=50)
-        Split.objects.create(tx=self.tx, ac=self.child, t_sp='dr', am=200)
-        Split.objects.create(tx=self.tx, ac=self.child, t_sp='cr', am=150)
-        Split.objects.create(tx=self.tx, ac=self.child1, t_sp='dr', am=300)
-        Split.objects.create(tx=self.tx, ac=self.child1, t_sp='cr', am=250)
+        self.assertEqual(single_bal, expected_single_bal)
+        self.assertEqual(child_bal, expected_child_bal)
+        self.assertEqual(child1_bal, expected_child1_bal)
+        self.assertEqual(parent_bal, expected_parent_bal)
 
-        total_dr_sum = ImpersonalAccount.total_bal()['total_dr_sum']
-        total_cr_sum = ImpersonalAccount.total_bal()['total_cr_sum']
-
-        self.assertEqual(total_dr_sum, 600)
-        self.assertEqual(total_cr_sum, 450)
-
-    def test_total_bal_with_arguments(self):
-        Split.objects.create(tx=self.tx, ac=self.single, t_sp='dr', am=100)
-        Split.objects.create(tx=self.tx, ac=self.single, t_sp='cr', am=50)
-        Split.objects.create(tx=self.tx, ac=self.child, t_sp='dr', am=200)
-        Split.objects.create(tx=self.tx, ac=self.child, t_sp='cr', am=150)
-        Split.objects.create(tx=self.tx, ac=self.child1, t_sp='dr', am=300)
-        Split.objects.create(tx=self.tx, ac=self.child1, t_sp='cr', am=450)
-
-        total_bal = ImpersonalAccount.total_bal(t_ac='AS')
-        total_bal1 = ImpersonalAccount.total_bal(t_ac='LI')
+    def test_total_bal_with_no_args(self):
+        total_bal = ImpersonalAccount.total_bal()
 
         expected_total_bal = {
-                'total_dr_sum': 100,
-                'total_cr_sum': 50,
-                'diff': 50
-        }
-        expected_total_bal1 = {
-                'total_dr_sum': 500,
-                'total_cr_sum': 600,
-                'diff': -100
+                'total_dr_sum': 30, 'total_cr_sum': 30, 'diff': 0
         }
 
         self.assertEqual(total_bal, expected_total_bal)
-        self.assertEqual(total_bal1, expected_total_bal1)
+
+    def test_total_bal_with_args(self):
+        li_total_bal = ImpersonalAccount.total_bal(t_ac='LI')
+        ex_total_bal = ImpersonalAccount.total_bal(t_ac='EX')
+
+        li_expected_total_bal = {
+                'total_dr_sum': 15, 'total_cr_sum': 15, 'diff': 0
+        }
+        ex_expected_total_bal = {
+                'total_dr_sum': 15, 'total_cr_sum': 15, 'diff': 0
+        }
+
+        self.assertEqual(li_total_bal, li_expected_total_bal)
+        self.assertEqual(ex_total_bal, ex_expected_total_bal)
 
     def test_validate_accounting_equation(self):
         with self.assertRaises(exceptions.AccountingEquationViolationError):
@@ -156,26 +132,24 @@ class TransactionAndSplitModelTest(TestCase):
 
         cls.tx = Transaction.objects.create(desc='tx')
 
-    def test_create_and_retreive_txs(self):
-        saved_txs = Transaction.objects.all()
+        Split.objects.create(tx=cls.tx, ac=cls.single, t_sp='dr', am=6)
+        Split.objects.create(tx=cls.tx, ac=cls.child, t_sp='cr', am=9)
 
-        self.assertEqual(saved_txs.count(), 1)
-        self.assertEqual(saved_txs[0].desc, 'tx')
+    def test_create_and_retreive_txs(self):
+        saved_tx = Transaction.objects.first()
+        self.assertEqual(self.tx, saved_tx)
 
     def test_create_and_retreive_splits(self):
-        Split.objects.create(tx=self.tx, ac=self.single, t_sp='dr', am=100)
-        Split.objects.create(tx=self.tx, ac=self.child, t_sp='cr', am=100)
+        saved_splits = Split.objects.all()
 
-        saved_split = Split.objects.all()
+        self.assertEqual(saved_splits.count(), 2)
+        self.assertEqual(saved_splits[0].ac, self.single)
+        self.assertEqual(saved_splits[0].t_sp, 'dr')
+        self.assertEqual(saved_splits[0].am, 6)
 
-        self.assertEqual(saved_split.count(), 2)
-        self.assertEqual(saved_split[0].ac, self.single)
-        self.assertEqual(saved_split[0].t_sp, 'dr')
-        self.assertEqual(saved_split[0].am, 100)
-
-        self.assertEqual(saved_split[1].ac, self.child)
-        self.assertEqual(saved_split[1].t_sp, 'cr')
-        self.assertEqual(saved_split[1].am, 100)
+        self.assertEqual(saved_splits[1].ac, self.child)
+        self.assertEqual(saved_splits[1].t_sp, 'cr')
+        self.assertEqual(saved_splits[1].am, 9)
 
     def test_raises_exception_if_split_amount_zero(self):
         Split.objects.create(tx=self.tx, ac=self.single, t_sp='dr', am=100)
