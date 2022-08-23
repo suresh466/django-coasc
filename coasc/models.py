@@ -50,15 +50,15 @@ class ImpersonalAccount(models.Model):
 
     def bal(self):
         if self.who_am_i()['parent']:
-            sps = Split.objects.filter(account__p_ac=self)
+            sps = Split.objects.filter(ac__p_ac=self)
         else:
             sps = self.split_set.all()
 
-        dr_sps = sps.filter(type_split='dr')
-        cr_sps = sps.filter(type_split='cr')
+        dr_sps = sps.filter(t_sp='dr')
+        cr_sps = sps.filter(t_sp='cr')
 
-        dr_sum = dr_sps.aggregate(dr_sum=Sum('amount'))['dr_sum'] or 0
-        cr_sum = cr_sps.aggregate(cr_sum=Sum('amount'))['cr_sum'] or 0
+        dr_sum = dr_sps.aggregate(dr_sum=Sum('am'))['dr_sum'] or 0
+        cr_sum = cr_sps.aggregate(cr_sum=Sum('am'))['cr_sum'] or 0
         diff = dr_sum - cr_sum
 
         return {'dr_sum': dr_sum, 'cr_sum': cr_sum, 'diff': diff}
@@ -66,14 +66,14 @@ class ImpersonalAccount(models.Model):
     @classmethod
     def total_bal(cls, t_ac=None):
         if t_ac is None:
-            accounts = cls.objects.filter(p_ac=None)
+            acs = cls.objects.filter(p_ac=None)
         else:
-            accounts = cls.objects.filter(t_ac=t_ac)
+            acs = cls.objects.filter(t_ac=t_ac)
 
         tds = Decimal(0)
         tcs = Decimal(0)
-        for account in accounts:
-            bals = account.bal()
+        for ac in acs:
+            bals = ac.bal()
             tds += bals['dr_sum']
             tcs += bals['cr_sum']
 
@@ -106,7 +106,7 @@ def raise_exceptions_impersonalaccount(sender, **kwargs):
 
 
 class Transaction(models.Model):
-    description = models.TextField(blank=True, default='')
+    desc = models.TextField(blank=True, default='')
 
     def __str__(self):
         string = f'{self.pk}->{self.split_set.count()}'
@@ -120,22 +120,21 @@ class Split(models.Model):
         (DEBIT, 'Debit'),
         (CREDIT, 'Credit'),
     ]
-    transaction = models.ForeignKey(
-            Transaction, on_delete=models.PROTECT)
-    account = models.ForeignKey(ImpersonalAccount, on_delete=models.PROTECT)
-    type_split = models.CharField(max_length=2, choices=TYPE_SPLIT_CHOICES)
-    amount = models.DecimalField(decimal_places=2, max_digits=11)
+    tx = models.ForeignKey(Transaction, on_delete=models.PROTECT)
+    ac = models.ForeignKey(ImpersonalAccount, on_delete=models.PROTECT)
+    t_sp = models.CharField(max_length=2, choices=TYPE_SPLIT_CHOICES)
+    am = models.DecimalField(decimal_places=2, max_digits=11)
 
     def __str__(self):
-        string = (f'{self.transaction.pk}->{self.type_split}={self.amount}')
+        string = (f'{self.tx.pk}->{self.t_sp}={self.am}')
         return string
 
 
 @receiver(signals.pre_save, sender=Split)
 def raise_exceptions_split(sender, **kwargs):
     sp_instance = kwargs['instance']
-    if (sp_instance.account.who_am_i())['parent']:
+    if (sp_instance.ac.who_am_i())['parent']:
         raise exceptions.TransactionOnParentAcError(
                 'transaction on parent not allowed')
-    if sp_instance.amount <= 0:
+    if sp_instance.am <= 0:
         raise exceptions.ZeroAmountError('amount must be greater than 0')
