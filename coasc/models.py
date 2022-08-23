@@ -33,50 +33,36 @@ class ImpersonalAccount(models.Model):
         string = f'{self.name}->({self.code})'
         return string
 
-    def __simple_balance(self):
-        sps = self.split_set.all()
-        dr_sps = sps.filter(type_split='dr')
-        cr_sps = sps.filter(type_split='cr')
-
-        dr_sum = dr_sps.aggregate(dr_sum=Sum('amount'))['dr_sum'] or 0
-        cr_sum = cr_sps.aggregate(cr_sum=Sum('amount'))['cr_sum'] or 0
-        diff = dr_sum - cr_sum
-
-        return {'dr_sum': dr_sum, 'cr_sum': cr_sum, 'diff': diff}
-
-    def __accumulated_balance(self):
-        sps = Split.objects.filter(account__parent_ac=self)
-        dr_sps = sps.filter(type_split='dr')
-        cr_sps = sps.filter(type_split='cr')
-
-        dr_sum = dr_sps.aggregate(dr_sum=Sum('amount'))['dr_sum'] or 0
-        cr_sum = cr_sps.aggregate(cr_sum=Sum('amount'))['cr_sum'] or 0
-        diff = dr_sum - cr_sum
-
-        return {'dr_sum': dr_sum, 'cr_sum': cr_sum, 'diff': diff}
-
     def who_am_i(self):
-        ac = dict.fromkeys(['parent', 'child', 'single'], None)
+        ac_is = dict.fromkeys(['parent', 'child', 'single'], None)
         if not self.type_ac:
-            ac['child'] = True
-            return ac
+            ac_is['child'] = True
+            return ac_is
 
         elif self.impersonalaccount_set.exists():
-            ac['parent'] = True
-            return ac
+            ac_is['parent'] = True
+            return ac_is
 
         elif self.type_ac and not self.impersonalaccount_set.exists():
-            ac['single'] = True
-            return ac
+            ac_is['single'] = True
+            return ac_is
         else:
             return 'Something went wrong! Maybe this account should not exist'
 
-    def current_balance(self):
-        ac = self.who_am_i()
-        if ac['parent']:
-            return self.__accumulated_balance()
-        if ac['single'] or ac['child']:
-            return self.__simple_balance()
+    def bal(self):
+        if self.who_am_i()['parent']:
+            sps = Split.objects.filter(account__parent_ac=self)
+        else:
+            sps = self.split_set.all()
+
+        dr_sps = sps.filter(type_split='dr')
+        cr_sps = sps.filter(type_split='cr')
+
+        dr_sum = dr_sps.aggregate(dr_sum=Sum('amount'))['dr_sum'] or 0
+        cr_sum = cr_sps.aggregate(cr_sum=Sum('amount'))['cr_sum'] or 0
+        diff = dr_sum - cr_sum
+
+        return {'dr_sum': dr_sum, 'cr_sum': cr_sum, 'diff': diff}
 
     @classmethod
     def total_current_balance(cls, type_ac=None):
@@ -88,7 +74,7 @@ class ImpersonalAccount(models.Model):
         tds = Decimal(0)
         tcs = Decimal(0)
         for account in accounts:
-            bals = account.current_balance()
+            bals = account.bal()
             tds += bals['dr_sum']
             tcs += bals['cr_sum']
 

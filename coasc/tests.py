@@ -68,7 +68,7 @@ class AccountModelTest(TestCase):
         self.assertTrue(not ac2['child'])
         self.assertTrue(not ac3['single'])
 
-    def test_current_balance(self):
+    def test_bal(self):
         Split.objects.create(
                 transaction=self.transaction1, account=self.single_ac1,
                 type_split='dr', amount=100)
@@ -88,10 +88,10 @@ class AccountModelTest(TestCase):
                 transaction=self.transaction1, account=self.child_ac2,
                 type_split='cr', amount=250)
 
-        single_ac1_balance = self.single_ac1.current_balance()
-        child_ac1_balance = self.child_ac1.current_balance()
-        child_ac2_balance = self.child_ac2.current_balance()
-        parent_ac1_balance = self.parent_ac1.current_balance()
+        single_ac1_balance = self.single_ac1.bal()
+        child_ac1_balance = self.child_ac1.bal()
+        child_ac2_balance = self.child_ac2.bal()
+        parent_ac1_balance = self.parent_ac1.bal()
 
         self.assertEqual(single_ac1_balance['dr_sum'], 100)
         self.assertEqual(single_ac1_balance['cr_sum'], 50)
