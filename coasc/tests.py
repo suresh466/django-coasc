@@ -1,4 +1,3 @@
-from decimal import Decimal
 from django.test import TestCase
 
 from coasc.models import ImpersonalAccount
@@ -157,14 +156,14 @@ class AccountModelTest(TestCase):
                 type_ac='LI')
 
         expected_total_current_balance1 = {
-                'total_dr_sum': Decimal(100.00),
-                'total_cr_sum': Decimal(50.00),
-                'difference': Decimal(50.00)
+                'total_dr_sum': 100,
+                'total_cr_sum': 50,
+                'difference': 50.00
         }
         expected_total_current_balance2 = {
-                'total_dr_sum': Decimal(500.00),
-                'total_cr_sum': Decimal(600.00),
-                'difference': Decimal(-100.00)
+                'total_dr_sum': 500,
+                'total_cr_sum': 600,
+                'difference': -100
         }
 
         self.assertEqual(
