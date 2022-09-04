@@ -147,3 +147,12 @@ def raise_exceptions_split(sender, **kwargs):
                 'transaction on parent not allowed')
     if sp_instance.am <= 0:
         raise exceptions.ZeroAmountError('amount must be greater than 0')
+
+
+class Member(models.Model):
+    name = models.CharField(max_length=255)
+    code = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        string = f'{self.name}->{self.code}'
+        return string
