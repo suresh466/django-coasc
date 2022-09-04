@@ -4,6 +4,19 @@ from coasc.models import Ac, Transaction, Split, Member
 from coasc import exceptions
 
 
+class MemberModelTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        Member(name='fn ln', code=1).save()
+        Member(name='fn1 ln1', code=2).save()
+
+    def test_create_and_retreive(self):
+        saved_mems = Member.objects.all()
+
+        self.assertEqual(saved_mems[0].code, '1')
+        self.assertEqual(saved_mems[1].code, '2')
+
+
 class AccountModelTest(TestCase):
 
     @classmethod
@@ -115,6 +128,16 @@ class AccountModelTest(TestCase):
         with self.assertRaises(exceptions.SingleAccountIsNotParentError):
             Ac.objects.create(name='child', code='3.1', p_ac=single)
 
+    def test_raises_exception_if_personal_ac_has_no_member(self):
+        with self.assertRaises(exceptions.MemberRequiredOnPersonalAcError):
+            Ac.objects.create(name='single', code=4, cat='LI', t_ac='P')
+
+    def test_raises_exception_if_impersonal_ac_has_member(self):
+        mem = Member.objects.create(name='ln fn', code=1)
+        with self.assertRaises(exceptions.MemberOnImpersonalAcError):
+            Ac.objects.create(
+                    name='single', code=5, cat='LI', t_ac='I', mem=mem)
+
 
 class TransactionAndSplitModelTest(TestCase):
 
@@ -152,16 +175,3 @@ class TransactionAndSplitModelTest(TestCase):
         Split.objects.create(tx=self.tx, ac=self.single, t_sp='dr', am=100)
         with self.assertRaises(exceptions.ZeroAmountError):
             Split.objects.create(tx=self.tx, ac=self.child, t_sp='cr', am=0)
-
-
-class MemberModelTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        Member(name='fn ln', code=1).save()
-        Member(name='fn1 ln1', code=2).save()
-
-    def test_create_and_retreive(self):
-        saved_mems = Member.objects.all()
-
-        self.assertEqual(saved_mems[0].code, '1')
-        self.assertEqual(saved_mems[1].code, '2')
