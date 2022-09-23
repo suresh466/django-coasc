@@ -137,6 +137,7 @@ def raise_exceptions_ac(sender, **kwargs):
 
 
 class Transaction(models.Model):
+    date_created = models.DateTimeField(auto_now_add=True, editable=False)
     desc = models.TextField(blank=True, default='')
 
     def __str__(self):
