@@ -12,3 +12,10 @@ A simple and well tested core to build double entry system accounting apps upon.
 ### PS:
 COASC stands for Cooperative Accounting System Core  
 COASV stands for Cooperative Accounting System View
+
+## TODOs
+1. add comments where appropriate
+2. Describe the whole concept of accounts (Parent, Single, Child)
+3. explain the validation of accounting equation
+4. figure out why am i getting the negative balances
+
