@@ -1,11 +1,10 @@
 from decimal import Decimal
 
 from django.db import models
-from django.db.models import Sum, signals
-from django.dispatch import receiver
+from django.db.models import Sum
 
-from nepali_datetime_field.models import NepaliDateField
-import nepali_datetime
+from django.dispatch import receiver
+from django.db.models import signals
 
 from coasc import exceptions
 
@@ -139,7 +138,6 @@ def raise_exceptions_ac(sender, **kwargs):
 
 class Transaction(models.Model):
     date_created = models.DateTimeField(auto_now_add=True, editable=False)
-    date = NepaliDateField(default=nepali_datetime.date.today)
     desc = models.TextField(blank=True, default='')
 
     def __str__(self):
