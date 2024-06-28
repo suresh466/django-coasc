@@ -1,10 +1,8 @@
 from decimal import Decimal
 
 from django.db import models
-from django.db.models import Sum
-
+from django.db.models import Sum, signals
 from django.dispatch import receiver
-from django.db.models import signals
 
 from coasc import exceptions
 
@@ -87,8 +85,11 @@ class Ac(models.Model):
 
     @classmethod
     def total_bal(cls, cat=None):
+        # if no category in argument, get all parent and single accounts
         if cat is None:
             acs = cls.objects.filter(p_ac=None)
+        # if category in argument, get parent and single accounts of that category
+        # dont get child accounts regardless
         else:
             acs = cls.objects.filter(cat=cat)
 
