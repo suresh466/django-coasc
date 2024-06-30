@@ -19,3 +19,4 @@ COASV stands for Cooperative Accounting System View
 3. explain the validation of accounting equation
 4. figure out why am i getting the negative balances
 5. write tests for date filtered bal and total_bal()
+6. modify tests for transaction(renamed date_created to created_at and add tx_date field)

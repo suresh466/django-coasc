@@ -3,6 +3,7 @@ from decimal import Decimal
 from django.db import models
 from django.db.models import Q, Sum, signals
 from django.dispatch import receiver
+from django.utils import timezone
 
 from coasc import exceptions
 
@@ -150,6 +151,7 @@ def raise_exceptions_ac(sender, **kwargs):
 
 class Transaction(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
+    tx_date = models.DateField(default=timezone.now)
     desc = models.TextField(blank=True, default="")
 
     def __str__(self):
