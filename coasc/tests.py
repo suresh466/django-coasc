@@ -1,7 +1,7 @@
 from django.test import TestCase
 
-from coasc.models import Ac, Transaction, Split, Member
 from coasc import exceptions
+from coasc.models import Ac, Member, Split, Transaction
 
 
 class MemberModelTest(TestCase):
@@ -168,8 +168,3 @@ class TransactionAndSplitModelTest(TestCase):
         self.assertEqual(saved_splits[1].ac, self.child)
         self.assertEqual(saved_splits[1].t_sp, "cr")
         self.assertEqual(saved_splits[1].am, 9)
-
-    def test_raises_exception_if_split_amount_zero(self):
-        Split.objects.create(tx=self.tx, ac=self.single, t_sp="dr", am=100)
-        with self.assertRaises(exceptions.ZeroAmountError):
-            Split.objects.create(tx=self.tx, ac=self.child, t_sp="cr", am=0)

@@ -181,5 +181,3 @@ def raise_exceptions_split(sender, **kwargs):
     sp_instance = kwargs["instance"]
     if (sp_instance.ac.who_am_i())["parent"]:
         raise exceptions.TransactionOnParentAcError("transaction on parent not allowed")
-    if sp_instance.am <= 0:
-        raise exceptions.ZeroAmountError("amount must be greater than 0")
