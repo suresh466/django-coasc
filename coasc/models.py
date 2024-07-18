@@ -1,7 +1,8 @@
 from decimal import Decimal
 
 from django.db import models
-from django.db.models import Q, Sum, signals
+from django.db.models import Case, F, Sum, When, signals
+from django.db.models.query import Q
 from django.dispatch import receiver
 from django.utils import timezone
 
@@ -157,6 +158,29 @@ class Transaction(models.Model):
     def __str__(self):
         string = f"{self.pk}->{self.split_set.count()}"
         return string
+
+    def validate_transaction(self):
+        # None is returned if no splits are found
+        split_sums = self.split_set.aggregate(
+            total_debit=Sum("am", filter=Q(t_sp="dr")),
+            total_credit=Sum("am", filter=Q(t_sp="cr")),
+        )
+
+        total_debit = split_sums["total_debit"]
+        total_credit = split_sums["total_credit"]
+
+        if total_debit is None and total_credit is None:
+            raise exceptions.EmptyTransactionError(
+                "Transaction must have at least one split each for debit and credit"
+            )
+
+        # this also handles when only one type of split is present
+        if total_debit != total_credit:
+            raise exceptions.UnbalancedTransactionError(
+                f"Transaction is not balanced. Debit: {total_debit}, Credit: {total_credit}"
+            )
+
+        return True
 
 
 class Split(models.Model):
