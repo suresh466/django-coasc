@@ -53,7 +53,7 @@ class Ac(models.Model):
     )
 
     def __str__(self):
-        string = f"{self.name}->({self.code})"
+        string = f"{self.name} ({self.code})"
         return string
 
     def who_am_i(self):
@@ -81,43 +81,63 @@ class Ac(models.Model):
         if end_date:
             sps = sps.filter(tx__tx_date__lte=end_date)
 
-        aggregates = sps.aggregate(
-            dr_sum=Sum("am", filter=Q(t_sp="dr")), cr_sum=Sum("am", filter=Q(t_sp="cr"))
+        balances = sps.aggregate(
+            total_debit=Sum(
+                Case(
+                    When(t_sp="dr", then=F("am")),
+                )
+            ),
+            total_credit=Sum(
+                Case(
+                    When(t_sp="cr", then=F("am")),
+                )
+            ),
         )
 
-        dr_sum = aggregates["dr_sum"] or Decimal(0)
-        cr_sum = aggregates["cr_sum"] or Decimal(0)
-        diff = dr_sum - cr_sum
+        total_debit = balances["total_debit"] or Decimal(0)
+        total_credit = balances["total_credit"] or Decimal(0)
 
-        return {"dr_sum": dr_sum, "cr_sum": cr_sum, "diff": diff}
+        # handle child don't have category (TODO: rethink if child should have category too for consistency)
+        ac_cat = self.p_ac.cat if self.who_am_i()["child"] else self.cat
+
+        if ac_cat in [self.ASSET, self.EXPENSES]:
+            net_balance = total_debit - total_credit
+            net_debit = max(net_balance, Decimal(0))
+            net_credit = max(-net_balance, Decimal(0))
+        elif ac_cat in [self.LIABILITY, self.INCOME]:
+            net_balance = total_credit - total_debit
+            net_debit = max(-net_balance, Decimal(0))
+            net_credit = max(net_balance, Decimal(0))
+
+        return {
+            "net_balance": net_balance,
+            "net_debit": net_debit,
+            "net_credit": net_credit,
+            "total_debit": total_debit,
+            "total_credit": total_credit,
+        }
 
     @classmethod
-    def total_bal(cls, cat=None, start_date=None, end_date=None):
-        # if no category in argument, get all parent and single accounts
-        if cat is None:
-            acs = cls.objects.filter(p_ac=None)
-        # if category in argument, get parent and single accounts of that category
-        # dont get child accounts regardless
-        else:
-            acs = cls.objects.filter(cat=cat)
 
-        tds = Decimal(0)
-        tcs = Decimal(0)
-        for ac in acs:
-            bals = ac.bal(start_date, end_date)
-            tds += bals["dr_sum"]
-            tcs += bals["cr_sum"]
-        diff = tds - tcs
 
-        return {"total_dr_sum": tds, "total_cr_sum": tcs, "diff": diff}
 
     @classmethod
     def validate_accounting_equation(cls):
-        total_bals = cls.total_bal()
-        if total_bals["diff"] != 0:
-            raise exceptions.AccountingEquationViolationError(
-                'Dr, Cr side not balanced; equation, "AS=LI+CA" not true;'
+        total_balance = Split.objects.aggregate(
+            total_debit=Sum("am", filter=models.Q(t_sp="dr")),
+            total_credit=Sum("am", filter=models.Q(t_sp="cr")),
+        )
+
+        total_debit = total_balance["total_debit"] or Decimal("0")
+        total_credit = total_balance["total_credit"] or Decimal("0")
+        difference = total_debit - total_credit
+
+        if difference != Decimal("0"):
+            raise exceptions.AccountingEquationViolationError()(
+                f"Accounting equation violation. Difference between debits and credits: {difference}"
             )
+
+        return True
 
 
 @receiver(signals.pre_save, sender=Ac)
