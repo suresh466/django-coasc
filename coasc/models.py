@@ -209,7 +209,7 @@ def raise_exceptions_ac(sender, **kwargs):
 class Transaction(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
     tx_date = models.DateField(default=timezone.now)
-    desc = models.TextField(blank=True, default="")
+    desc = models.TextField()
 
     def __str__(self):
         string = f"{self.pk}->{self.split_set.count()}"
