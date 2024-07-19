@@ -160,7 +160,7 @@ class Ac(models.Model):
         difference = total_debit - total_credit
 
         if difference != Decimal("0"):
-            raise exceptions.AccountingEquationViolationError()(
+            raise exceptions.AccountingEquationViolationError(
                 f"Accounting equation violation. Difference between debits and credits: {difference}"
             )
 
