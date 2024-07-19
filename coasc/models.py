@@ -75,22 +75,8 @@ class Ac(models.Model):
     def is_standalone(self):
         return self.is_root and not self.is_parent and self.split_set.exists()
 
-    def who_am_i(self):
-        ac_is = dict.fromkeys(["parent", "child", "single"], None)
-        if not self.cat:
-            ac_is["child"] = True
-            return ac_is
-        elif self.ac_set.exists():
-            ac_is["parent"] = True
-            return ac_is
-        elif self.cat and not self.ac_set.exists():
-            ac_is["single"] = True
-            return ac_is
-        else:
-            return "Something went wrong! Maybe this account should not exist"
-
     def bal(self, start_date=None, end_date=None):
-        if self.who_am_i()["parent"]:
+        if self.is_parent:
             sps = Split.objects.filter(ac__p_ac=self)
         else:
             sps = self.split_set.all()
@@ -117,7 +103,7 @@ class Ac(models.Model):
         total_credit = balances["total_credit"] or Decimal(0)
 
         # handle child don't have category (TODO: rethink if child should have category too for consistency)
-        ac_cat = self.p_ac.cat if self.who_am_i()["child"] else self.cat
+        ac_cat = self.p_ac.cat if self.is_child else self.cat
 
         if ac_cat in [self.ASSET, self.EXPENSES]:
             net_balance = total_debit - total_credit
@@ -189,31 +175,35 @@ class Ac(models.Model):
 @receiver(signals.pre_save, sender=Ac)
 def raise_exceptions_ac(sender, **kwargs):
     ac_instance = kwargs["instance"]
-    if not ac_instance.p_ac and not ac_instance.cat:
-        raise exceptions.OrphanAccountCreationError("must have a parent or category")
 
-    if ac_instance.p_ac:
+    if not ac_instance.is_root and not ac_instance.is_child:
+        raise exceptions.InvalidAccountError(
+            "Account must be either a root account or a child account"
+        )
+
+    if ac_instance.is_child:
         if ac_instance.cat:
-            raise exceptions.AccountTypeOnChildAccountError(
-                "category on a child not allowed"
+            raise exceptions.CategoryOnChildAccountError(
+                "Child account cannot have a category"
             )
 
-        elif ac_instance.p_ac.split_set.exists():
-            raise exceptions.SingleAccountIsNotParentError(
-                "single account cannot be a parent"
+        elif ac_instance.p_ac.is_standalone:
+            raise exceptions.StandaloneAccountCannotBeParentError(
+                "Standalone account (with transactions) cannot be a parent"
             )
 
-    if ac_instance.t_ac == "P":
-        if ac_instance.mem is None:
-            raise exceptions.MemberRequiredOnPersonalAcError(
-                "Personal Ac must have a member"
+        elif ac_instance.p_ac.is_child:
+            raise exceptions.ChildAccountCannotBeParentError(
+                "A child account cannot be a parent"
             )
 
-    if ac_instance.t_ac == "I":
-        if ac_instance.mem:
-            raise exceptions.MemberOnImpersonalAcError(
-                "Impersonal Ac cannot have a member"
-            )
+    if ac_instance.t_ac == Ac.PERSONAL and ac_instance.mem is None:
+        raise exceptions.MemberRequiredOnPersonalAcError(
+            "Personal Ac must have a member"
+        )
+
+    if ac_instance.t_ac == Ac.IMPERSONAL and ac_instance.mem is not None:
+        raise exceptions.MemberOnImpersonalAcError("Impersonal Ac cannot have a member")
 
 
 class Transaction(models.Model):
@@ -269,5 +259,5 @@ class Split(models.Model):
 @receiver(signals.pre_save, sender=Split)
 def raise_exceptions_split(sender, **kwargs):
     sp_instance = kwargs["instance"]
-    if (sp_instance.ac.who_am_i())["parent"]:
-        raise exceptions.TransactionOnParentAcError("transaction on parent not allowed")
+    if sp_instance.ac.is_parent:
+        raise exceptions.TransactionOnParentAcError("Transaction on parent not allowed")

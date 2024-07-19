@@ -51,7 +51,7 @@ class AccountModelTest(TestCase):
         self.assertEqual(saved_accounts[2].code, "2.1")
 
     def test_raises_exception_if_cat_set_on_child(self):
-        with self.assertRaises(exceptions.AccountTypeOnChildAccountError):
+        with self.assertRaises(exceptions.CategoryOnChildAccountError):
             Ac.objects.create(
                 name="child ac2", p_ac=self.parent, cat="LI", t_ac="I", code="2.3"
             )
@@ -110,7 +110,7 @@ class AccountModelTest(TestCase):
             Ac.validate_accounting_equation()
 
     def test_raises_exception_if_ac_has_no_parent_and_category(self):
-        with self.assertRaises(exceptions.OrphanAccountCreationError):
+        with self.assertRaises(exceptions.InvalidAccountError):
             Ac.objects.create(name="orphan", code="0")
 
     def test_raises_exception_if_single_ac_selected_as_parent(self):
@@ -118,7 +118,7 @@ class AccountModelTest(TestCase):
         tx = Transaction.objects.create(desc="demo")
         Split.objects.create(tx=tx, ac=single, t_sp="dr", am=1)
 
-        with self.assertRaises(exceptions.SingleAccountIsNotParentError):
+        with self.assertRaises(exceptions.StandaloneAccountCannotBeParentError()):
             Ac.objects.create(name="child", code="3.1", p_ac=single)
 
     def test_raises_exception_if_personal_ac_has_no_member(self):
