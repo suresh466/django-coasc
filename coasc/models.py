@@ -1,3 +1,20 @@
+"""
+Coasc: Comprehensive Accounting System
+
+This module implements a double-entry bookkeeping system with support for
+hierarchical accounts, transactions, and splits. It provides functionality
+for managing accounts, recording transactions, and generating balance reports.
+
+Key components:
+- Member: Represents individuals or entities associated with accounts.
+- Ac (Account): The core entity representing different types of accounts.
+- Transaction: Represents financial transactions.
+- Split: Represents individual debit or credit entries within a transaction.
+
+The system enforces various accounting rules and constraints to maintain
+data integrity and adherence to accounting principles.
+"""
+
 from decimal import Decimal
 
 from django.db import models
@@ -10,15 +27,38 @@ from coasc import exceptions
 
 
 class Member(models.Model):
+    """
+    Represents a member associated with personal accounts.
+
+    Attributes:
+        name (str): The name of the member.
+        code (str): A unique code identifying the member.
+    """
+
     name = models.CharField(max_length=255)
     code = models.CharField(max_length=255, unique=True)
 
     def __str__(self):
-        string = f"{self.name}->{self.code}"
+        string = f"{self.name} ({self.code})"
         return string
 
 
 class Ac(models.Model):
+    """
+    Represents an account in the accounting system.
+
+    Accounts can be hierarchical (parent-child relationship) and are categorized
+    into different types (Asset, Liability, Income, Expense).
+
+    Attributes:
+        name (str): The name of the account.
+        t_ac (str): The type of account (Personal or Impersonal).
+        p_ac (Ac): The parent account, if any.
+        cat (str): The category of the account.
+        mem (Member): Associated member for personal accounts.
+        code (str): A unique code for the account.
+    """
+
     ASSET = "AS"
     LIABILITY = "LI"
     INCOME = "IN"
@@ -60,22 +100,44 @@ class Ac(models.Model):
 
     @property
     def is_root(self):
+        """Check if the account is a root account (has category and no parent)."""
         return self.cat is not None and self.p_ac is None
 
     @property
     def is_parent(self):
+        """Check if the account is a parent account (is root and has children)."""
         return self.is_root and self.ac_set.exists()
 
     @property
     def is_child(self):
+        """Check if the account is a child account (has parent and no category)."""
         return self.p_ac is not None and self.cat is None
 
     # A root but not a parent and not a child, with splits
     @property
     def is_standalone(self):
+        """
+        Check if the account is a standalone account.
+
+        A standalone account is a root account that is not a parent and has splits.
+        """
         return self.is_root and not self.is_parent and self.split_set.exists()
 
     def bal(self, start_date=None, end_date=None):
+        """
+        Calculate the balance for this account.
+
+        For parent accounts, it includes the balances of all child accounts.
+
+        Args:
+            start_date (date, optional): Start date for balance calculation.
+            end_date (date, optional): End date for balance calculation.
+
+        Returns:
+            dict: A dictionary containing net balance, net debit, net credit,
+                  total debit, and total credit.
+        """
+
         if self.is_parent:
             sps = Split.objects.filter(ac__p_ac=self)
         else:
@@ -124,6 +186,18 @@ class Ac(models.Model):
 
     @classmethod
     def get_flat_balances(cls, cat=None, start_date=None, end_date=None):
+        """
+        Get balances for all top-level accounts.
+
+        Args:
+            cat (str, optional): Category to filter accounts.
+            start_date (date, optional): Start date for balance calculation.
+            end_date (date, optional): End date for balance calculation.
+
+        Returns:
+            list: List of dictionaries containing account and balance information.
+        """
+
         top_level_accounts = cls.objects.filter(p_ac__isnull=True)
         if cat:
             top_level_accounts = top_level_accounts.filter(cat=cat)
@@ -135,6 +209,19 @@ class Ac(models.Model):
 
     @classmethod
     def get_hierarchical_balances(cls, cat=None, start_date=None, end_date=None):
+        """
+        Get hierarchical balances for all top-level accounts and their children.
+
+        Args:
+            cat (str, optional): Category to filter accounts.
+            start_date (date, optional): Start date for balance calculation.
+            end_date (date, optional): End date for balance calculation.
+
+        Returns:
+            list: Nested list of dictionaries containing account, balance,
+                  and children information.
+        """
+
         top_level_accounts = cls.objects.filter(p_ac__isnull=True)
         if cat:
             top_level_accounts = top_level_accounts.filter(cat=cat)
@@ -155,6 +242,16 @@ class Ac(models.Model):
 
     @classmethod
     def validate_accounting_equation(cls):
+        """
+        Validate that the accounting equation (Assets = Liabilities + Equity) holds.
+
+        Raises:
+            AccountingEquationViolationError: If the equation doesn't balance.
+
+        Returns:
+            bool: True if the equation balances.
+        """
+
         total_balance = Split.objects.aggregate(
             total_debit=Sum("am", filter=models.Q(t_sp="dr")),
             total_credit=Sum("am", filter=models.Q(t_sp="cr")),
@@ -174,6 +271,12 @@ class Ac(models.Model):
 
 @receiver(signals.pre_save, sender=Ac)
 def raise_exceptions_ac(sender, **kwargs):
+    """
+    Validate account constraints before saving.
+
+    Raises various exceptions if account constraints are violated.
+    """
+
     ac_instance = kwargs["instance"]
 
     if not ac_instance.is_root and not ac_instance.is_child:
@@ -207,6 +310,15 @@ def raise_exceptions_ac(sender, **kwargs):
 
 
 class Transaction(models.Model):
+    """
+    Represents a financial transaction.
+
+    Attributes:
+        created_at (datetime): Timestamp of when the transaction was created.
+        tx_date (date): The date of the transaction.
+        desc (str): Description of the transaction.
+    """
+
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
     tx_date = models.DateField(default=timezone.now)
     desc = models.TextField()
@@ -216,6 +328,17 @@ class Transaction(models.Model):
         return string
 
     def validate_transaction(self):
+        """
+        Validate that the transaction is balanced.
+
+        Raises:
+            EmptyTransactionError: If the transaction has no splits.
+            UnbalancedTransactionError: If debits don't equal credits.
+
+        Returns:
+            bool: True if the transaction is valid.
+        """
+
         # None is returned if no splits are found
         split_sums = self.split_set.aggregate(
             total_debit=Sum("am", filter=Q(t_sp="dr")),
@@ -240,6 +363,16 @@ class Transaction(models.Model):
 
 
 class Split(models.Model):
+    """
+    Represents a single debit or credit entry in a transaction.
+
+    Attributes:
+        tx (Transaction): The associated transaction.
+        ac (Ac): The account affected by this split.
+        t_sp (str): The type of split (debit or credit).
+        am (Decimal): The amount of the split.
+    """
+
     DEBIT = "dr"
     CREDIT = "cr"
     TYPE_SPLIT_CHOICES = [
@@ -258,6 +391,13 @@ class Split(models.Model):
 
 @receiver(signals.pre_save, sender=Split)
 def raise_exceptions_split(sender, **kwargs):
+    """
+    Validate split constraints before saving.
+
+    Raises:
+        TransactionOnParentAcError: If attempting to create a split for a parent account.
+    """
+
     sp_instance = kwargs["instance"]
     if sp_instance.ac.is_parent:
         raise exceptions.TransactionOnParentAcError("Transaction on parent not allowed")
