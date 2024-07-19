@@ -197,12 +197,12 @@ def raise_exceptions_ac(sender, **kwargs):
                 "A child account cannot be a parent"
             )
 
-    if ac_instance.t_ac == Ac.PERSONAL and ac_instance.mem is None:
+    if ac_instance.t_ac == Ac.PERSONAL and not ac_instance.mem_id:
         raise exceptions.MemberRequiredOnPersonalAcError(
             "Personal Ac must have a member"
         )
 
-    if ac_instance.t_ac == Ac.IMPERSONAL and ac_instance.mem is not None:
+    if ac_instance.t_ac == Ac.IMPERSONAL and ac_instance.mem_id:
         raise exceptions.MemberOnImpersonalAcError("Impersonal Ac cannot have a member")
 
 
