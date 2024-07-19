@@ -56,6 +56,23 @@ class Ac(models.Model):
         string = f"{self.name} ({self.code})"
         return string
 
+    @property
+    def is_root(self):
+        return self.cat is not None and self.p_ac is None
+
+    @property
+    def is_parent(self):
+        return self.is_root and self.ac_set.exists()
+
+    @property
+    def is_child(self):
+        return self.p_ac is not None and self.cat is None
+
+    # A root but not a parent and not a child, with splits
+    @property
+    def is_standalone(self):
+        return self.is_root and not self.is_parent and self.split_set.exists()
+
     def who_am_i(self):
         ac_is = dict.fromkeys(["parent", "child", "single"], None)
         if not self.cat:
