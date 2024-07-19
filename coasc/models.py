@@ -118,8 +118,35 @@ class Ac(models.Model):
         }
 
     @classmethod
+    def get_flat_balances(cls, cat=None, start_date=None, end_date=None):
+        top_level_accounts = cls.objects.filter(p_ac__isnull=True)
+        if cat:
+            top_level_accounts = top_level_accounts.filter(cat=cat)
 
+        return [
+            {"account": account, "balance": account.bal(start_date, end_date)}
+            for account in top_level_accounts
+        ]
 
+    @classmethod
+    def get_hierarchical_balances(cls, cat=None, start_date=None, end_date=None):
+        top_level_accounts = cls.objects.filter(p_ac__isnull=True)
+        if cat:
+            top_level_accounts = top_level_accounts.filter(cat=cat)
+
+        result = [
+            {
+                "account": account,
+                "balance": account.bal(start_date, end_date),
+                "children": [
+                    {"account": child, "balance": child.bal(start_date, end_date)}
+                    for child in account.ac_set.all()
+                ],
+            }
+            for account in top_level_accounts
+        ]
+
+        return result
 
     @classmethod
     def validate_accounting_equation(cls):
