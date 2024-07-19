@@ -44,7 +44,9 @@ class Ac(models.Model):
     p_ac = models.ForeignKey(
         "self", null=True, blank=True, default=None, on_delete=models.PROTECT
     )
-    cat = models.CharField(max_length=2, blank=True, choices=CATEGORY_CHOICES)
+    cat = models.CharField(
+        max_length=2, blank=True, default=None, choices=CATEGORY_CHOICES
+    )
     mem = models.ForeignKey(
         Member, null=True, blank=True, default=None, on_delete=models.PROTECT
     )
