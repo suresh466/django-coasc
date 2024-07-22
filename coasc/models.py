@@ -198,7 +198,7 @@ class Ac(models.Model):
             list: List of dictionaries containing account and balance information.
         """
 
-        top_level_accounts = cls.objects.filter(p_ac__isnull=True)
+        top_level_accounts = cls.objects.filter(p_ac__isnull=True, cat__isnull=False)
         if cat:
             top_level_accounts = top_level_accounts.filter(cat=cat)
 
@@ -222,7 +222,7 @@ class Ac(models.Model):
                   and children information.
         """
 
-        top_level_accounts = cls.objects.filter(p_ac__isnull=True)
+        top_level_accounts = cls.objects.filter(p_ac__isnull=True, cat__isnull=False)
         if cat:
             top_level_accounts = top_level_accounts.filter(cat=cat)
 
