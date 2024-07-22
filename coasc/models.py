@@ -17,7 +17,7 @@ data integrity and adherence to accounting principles.
 
 from decimal import Decimal
 
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Case, F, Sum, When, signals
 from django.db.models.query import Q
 from django.dispatch import receiver
@@ -360,6 +360,27 @@ class Transaction(models.Model):
             )
 
         return True
+
+    def revert_transaction(self):
+        """
+        Create a new transaction that reverts this transaction.
+
+        Returns:
+            Transaction: The newly created revert transaction.
+
+        Note:
+            This method is executed within a database transaction. If any part
+            of the operation fails, all changes will be rolled back.
+        """
+
+        with transaction.atomic():
+            revert_tx = Transaction.objects.create(desc=f"Revert: {self.desc}")
+
+            for sp in self.split_set.all():
+                t_sp = Split.DEBIT if sp.t_sp == Split.CREDIT else Split.CREDIT
+                Split.objects.create(tx=revert_tx, ac=sp.ac, t_sp=t_sp, am=sp.am)
+
+        return revert_tx
 
 
 class Split(models.Model):
