@@ -99,27 +99,19 @@ class Ac(models.Model):
         return string
 
     @property
-    def is_root(self):
-        """Check if the account is a root account (has category and no parent)."""
-        return self.cat is not None and self.p_ac is None
+    def is_parent(self):
+        """Check if the account is a parent account (has category, no parent, and has children)."""
+        return self.cat is not None and self.p_ac is None and self.ac_set.exists()
 
     @property
-    def is_parent(self):
-        """Check if the account is a parent account (is root and has children)."""
-        return self.is_root and self.ac_set.exists()
+    def is_standalone(self):
+        """Check if the account is a standalone account (has category, no parent, and no children)."""
+        return self.cat is not None and self.p_ac is None and not self.ac_set.exists()
 
     @property
     def is_child(self):
         """Check if the account is a child account (has parent and no category)."""
         return self.p_ac is not None and self.cat is None
-
-    # A root but not a parent and not a child, with splits
-    @property
-    def is_standalone(self):
-        """
-        Check if the account is a standalone account (is root and has no children)."""
-
-        return self.is_root and not self.is_parent
 
     def bal(self, start_date=None, end_date=None):
         """
@@ -276,11 +268,6 @@ def raise_exceptions_ac(sender, **kwargs):
     """
 
     ac_instance = kwargs["instance"]
-
-    if not ac_instance.is_root and not ac_instance.is_child:
-        raise exceptions.InvalidAccountError(
-            "Account must be either a root account or a child account"
-        )
 
     if ac_instance.is_child:
         if ac_instance.cat:
