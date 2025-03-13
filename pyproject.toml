@@ -1,0 +1,33 @@
+[project]
+name = "django-coasc"
+version = "0.1.1"
+description = "Django application providing a solid foundation for double-entry bookkeeping systems"
+readme = "README.md"
+requires-python = ">=3.13" # going with the latest stable at the time, should work with lower version too
+
+keywords = ["django", "accounting", "bookkeeping", "double-entry", "finance", "cooperative"]
+
+authors = [
+    {name = "Suresh Thagunna"}
+]
+
+
+dependencies = [
+    "django>=5.1.7",
+]
+
+[dependency-groups]
+dev = [
+    "psycopg2-binary>=2.9.10",
+    "ruff>=0.10.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/suresh466/django-coasc"
+
+[build-system]
+requires = ["setuptools>=66.1.1"] # going with the latest stable at the time, should work with >= 61
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["coasc"]
