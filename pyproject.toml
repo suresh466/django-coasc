@@ -1,6 +1,6 @@
 [project]
 name = "django-coasc"
-version = "0.1.1"
+version = "0.1.2"
 description = "Django application providing a solid foundation for double-entry bookkeeping systems"
 readme = "README.md"
 requires-python = ">=3.13" # going with the latest stable at the time, should work with lower version too
@@ -30,4 +30,4 @@ requires = ["setuptools>=66.1.1"] # going with the latest stable at the time, sh
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["coasc"]
+packages = { find = {} }
