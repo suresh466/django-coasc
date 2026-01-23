@@ -1,78 +1,83 @@
-# Django-coasc
+# COASC (Cooperative Accounting System Core)
 
-Double entry bookkeeping in Django. Inspired by [Django-hordak](https://github.com/adamcharnock/django-hordak) and [gnucash](https://github.com/Gnucash/gnucash)
+A simple and well-tested core to build double-entry accounting systems upon. **Django-coasc** provides a robust model layer primarily aimed at cooperative organizations but suitable for various accounting needs.
 
-A simple and well tested core to build double entry system accounting apps upon. Django-coasc provides a model layer for a double-entry accounting system, primarily aimed at cooperative organizations but suitable for various accounting needs.
+Inspired by [Django-hordak](https://github.com/adamcharnock/django-hordak) and [gnucash](https://github.com/Gnucash/gnucash).
 
-## Interface built upon Django-coasc
+## 🚀 Key Features
 
-> [COASV](https://github.com/suresh466/coasv) Accounting app for Cooperatives
+- **Double-Entry Bookkeeping**: Ensures accounting integrity where each transaction has balanced debits and credits.
+- **Hierarchical Accounts**: Flexible support for parent and child account relationships.
+- **Multiple Account Types**: Built-in handling for Assets, Liabilities, Income, and Expenses.
+- **Transaction Validation**: Rigorous validation logic to maintain data consistency.
+- **Balance Calculation**: Efficient methods for calculating balances with support for date filtering.
+- **Revertible Transactions**: Native support for safe transaction reversals.
 
-## Using Django-coasc in your project
+## 🛠️ Tech Stack
 
-### Install
+- **Framework:** Django
+- **Language:** Python
+- **Database:** PostgreSQL (Recommended)
+- **Tooling:** uv, Ruff, MyPy
 
-Install using [uv](https://github.com/astral-sh/uv)
+## 📦 Getting Started
 
-```bash
-uv add django-coasc
-```
+### Installation
 
-Or using pip:
+1. **Install the package**:
 
-```bash
-pip install django-coasc
-```
+   Using [uv](https://github.com/astral-sh/uv):
 
-Add `coasc` to your `INSTALLED_APPS` in Django settings:
+   ```bash
+   uv add django-coasc
+   ```
 
-```python
-INSTALLED_APPS = [
-    # ...
-    'coasc',
-    # ...
-]
-```
+   Or using pip:
 
-### Run migrations
+   ```bash
+   pip install django-coasc
+   ```
 
-```bash
-python manage.py migrate coasc
+2. **Configure Django**:
 
-```
+   Add `coasc` to your `INSTALLED_APPS` in `settings.py`:
 
-Or using uv:
+   ```python
+   INSTALLED_APPS = [
+       # ...
+       'coasc',
+       # ...
+   ]
+   ```
 
-```bash
-uv run ./manage.py migrate coasc
-```
+3. **Run Migrations**:
 
-## Features
+   ```bash
+   python manage.py migrate coasc
+   ```
 
-- **Double-entry bookkeeping** - Each transaction must have balanced debits and credits
-- **Hierarchical accounts** - Support for parent and child account relationships
-- **Multiple account types** - Assets, Liabilities, Income, and Expenses
-- **Transaction validation** - Ensures accounting integrity
-- **Balance calculation** - Methods to calculate account balances with optional date filters
-- **Revertible transactions** - Built-in support for reverting transactions
+   Or using uv:
 
-## Core Components
+   ```bash
+   uv run ./manage.py migrate coasc
+   ```
 
-- **Member**: Represents individuals or entities associated with accounts
-- **Ac (Account)**: The core entity representing different types of accounts
-  - Parent accounts - Group related accounts
-  - Child accounts - Belong to a parent account
-  - Standalone accounts - Independent accounts
-- **Transaction**: Represents financial transactions
-- **Split**: Represents individual debit or credit entries within a transaction
+## 🧩 Core Components
 
-### Terminology
+- **Member**: Represents individuals or entities associated with accounts.
+- **Ac (Account)**: The core entity representing different types of accounts.
+  - *Parent accounts*: Group related accounts.
+  - *Child accounts*: Belong to a parent account.
+  - *Standalone accounts*: Independent accounts.
+- **Transaction**: Represents a financial event affecting the books.
+- **Split**: Represents individual debit or credit entries within a transaction.
 
-COASC: Cooperative Accounting System Core
-COASV: Cooperative Accounting System View
+## 🔗 Related Projects
 
-## TODOs
+- **[COASV](https://github.com/suresh466/coasv)** (Cooperative Accounting System View): A comprehensive accounting interface for Cooperatives built upon this core.
 
-1. add comments where appropriate
-2. write tests for date filtered bal and total_bal()
-3. modify tests for transaction(renamed date_created to created_at and add tx_date field)
+## ✅ TODOs
+
+1. Add comments where appropriate.
+2. Write tests for date filtered `bal()` and `total_bal()`.
+3. Modify tests for transaction (renamed `date_created` to `created_at` and add `tx_date` field).
