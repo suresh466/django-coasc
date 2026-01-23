@@ -81,18 +81,12 @@ class Ac(models.Model):
 
     name = models.CharField(max_length=255)
     t_ac = models.CharField(max_length=1, choices=TYPE_AC_CHOICES)
-    p_ac = models.ForeignKey(
-        "self", null=True, blank=True, default=None, on_delete=models.PROTECT
-    )
+    p_ac = models.ForeignKey("self", null=True, blank=True, default=None, on_delete=models.PROTECT)
     cat = models.CharField(
         max_length=2, blank=True, null=True, default=None, choices=CATEGORY_CHOICES
     )
-    mem = models.ForeignKey(
-        Member, null=True, blank=True, default=None, on_delete=models.PROTECT
-    )
-    code = models.CharField(
-        max_length=255, blank=True, null=True, default=None, unique=True
-    )
+    mem = models.ForeignKey(Member, null=True, blank=True, default=None, on_delete=models.PROTECT)
+    code = models.CharField(max_length=255, blank=True, null=True, default=None, unique=True)
 
     def __str__(self):
         string = f"{self.name} ({self.code})"
@@ -271,9 +265,7 @@ def raise_exceptions_ac(sender, **kwargs):
 
     if ac_instance.is_child:
         if ac_instance.cat:
-            raise exceptions.CategoryOnChildAccountError(
-                "Child account cannot have a category"
-            )
+            raise exceptions.CategoryOnChildAccountError("Child account cannot have a category")
 
         elif ac_instance.p_ac.split_set.exists():
             raise exceptions.AccountWithTransactionCannotBeParentError(
@@ -281,13 +273,9 @@ def raise_exceptions_ac(sender, **kwargs):
             )
 
         elif ac_instance.p_ac.is_child:
-            raise exceptions.ChildAccountCannotBeParentError(
-                "A child account cannot be a parent"
-            )
+            raise exceptions.ChildAccountCannotBeParentError("A child account cannot be a parent")
     if ac_instance.t_ac == Ac.PERSONAL and not ac_instance.mem_id:
-        raise exceptions.MemberRequiredOnPersonalAcError(
-            "Personal Ac must have a member"
-        )
+        raise exceptions.MemberRequiredOnPersonalAcError("Personal Ac must have a member")
 
     if ac_instance.t_ac == Ac.IMPERSONAL and ac_instance.mem_id:
         raise exceptions.MemberOnImpersonalAcError("Impersonal Ac cannot have a member")

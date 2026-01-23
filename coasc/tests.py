@@ -22,12 +22,8 @@ class AccountModelTest(TestCase):
     def setUpTestData(cls):
         cls.single = Ac.objects.create(name="single", cat="LI", t_ac="I", code="1")
         cls.parent = Ac.objects.create(name="parent", cat="EX", t_ac="I", code="2")
-        cls.child = Ac.objects.create(
-            name="child", p_ac=cls.parent, t_ac="I", code="2.1"
-        )
-        cls.child1 = Ac.objects.create(
-            name="child1", p_ac=cls.parent, t_ac="I", code="2.2"
-        )
+        cls.child = Ac.objects.create(name="child", p_ac=cls.parent, t_ac="I", code="2.1")
+        cls.child1 = Ac.objects.create(name="child1", p_ac=cls.parent, t_ac="I", code="2.2")
 
         cls.tx = Transaction.objects.create(desc="tx")
 
@@ -52,9 +48,7 @@ class AccountModelTest(TestCase):
 
     def test_raises_exception_if_cat_set_on_child(self):
         with self.assertRaises(exceptions.CategoryOnChildAccountError):
-            Ac.objects.create(
-                name="child ac2", p_ac=self.parent, cat="LI", t_ac="I", code="2.3"
-            )
+            Ac.objects.create(name="child ac2", p_ac=self.parent, cat="LI", t_ac="I", code="2.3")
 
     def test_raises_exception_if_p_ac_selected_as_a_splicat(self):
         Split.objects.create(tx=self.tx, ac=self.single, t_sp="dr", am=100)
@@ -134,9 +128,7 @@ class AccountModelTest(TestCase):
             Ac.objects.create(name="single", code=5, cat="LI", t_ac="I", mem=mem)
 
         with self.assertRaises(exceptions.MemberOnImpersonalAcError):
-            Ac.objects.create(
-                name="child", code=2.3, t_ac="I", p_ac=self.parent, mem=mem
-            )
+            Ac.objects.create(name="child", code=2.3, t_ac="I", p_ac=self.parent, mem=mem)
 
 
 class TransactionAndSplitModelTest(TestCase):
@@ -144,9 +136,7 @@ class TransactionAndSplitModelTest(TestCase):
     def setUpTestData(cls):
         cls.single = Ac.objects.create(name="single", cat="AS", t_ac="I", code="1")
         cls.parent = Ac.objects.create(name="parent", cat="LI", t_ac="I", code="2")
-        cls.child = Ac.objects.create(
-            name="child", p_ac=cls.parent, t_ac="I", code="2.1"
-        )
+        cls.child = Ac.objects.create(name="child", p_ac=cls.parent, t_ac="I", code="2.1")
 
         cls.tx = Transaction.objects.create(desc="tx")
 

@@ -3,7 +3,7 @@ name = "django-coasc"
 version = "0.1.2"
 description = "Django application providing a solid foundation for double-entry bookkeeping systems"
 readme = "README.md"
-requires-python = ">=3.13" # going with the latest stable at the time, should work with lower version too
+requires-python = ">=3.13"
 
 keywords = ["django", "accounting", "bookkeeping", "double-entry", "finance", "cooperative"]
 
@@ -11,23 +11,48 @@ authors = [
     {name = "Suresh Thagunna"}
 ]
 
-
 dependencies = [
     "django>=5.1.7",
 ]
 
 [dependency-groups]
 dev = [
-    "psycopg2-binary>=2.9.10",
+    "psycopg2-binary>=2.9.11",
     "ruff>=0.10.0",
+    "django-stubs[compatible-mypy]>=5.1.7",
 ]
 
 [project.urls]
 "Homepage" = "https://github.com/suresh466/django-coasc"
 
 [build-system]
-requires = ["setuptools>=66.1.1"] # going with the latest stable at the time, should work with >= 61
+requires = ["setuptools>=66.1.1"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 packages = { find = {} }
+
+# MyPy
+[tool.mypy]
+python_version = "3.13"
+plugins = ["mypy_django_plugin.main"]
+strict_optional = true
+ignore_missing_imports = true
+exclude = [".venv"]
+
+[tool.django-stubs]
+django_settings_module = "coas_core.settings"
+
+# basedPyright
+[tool.basedpyright]
+typeCheckingMode = "off"
+basedpyright.disableOrganizeImports = true
+
+# Ruff (Linter & Formatter)
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.format]
+quote-style = "double"
+docstring-code-format = true
